@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>コースターシューティング (赤色検出モード)</title>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fff; }
+
+    /* 背景カメラ映像 */
+    #camera-feed {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      object-fit: cover; z-index: 1;
+    }
+
+    /* 画像解析用隠しキャンバス */
+    #proc-canvas { display: none; }
+
+    /* スタート画面 */
+    #start-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;
+      background: rgba(255, 255, 255, 0.95); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; color: #0088cc; text-align: center; padding: 25px;
+      backdrop-filter: blur(5px);
+    }
+    #start-overlay h2 { font-size: 26px; font-weight: 800; color: #0099e6; margin-bottom: 10px; }
+    #start-overlay p { font-size: 14px; color: #557799; line-height: 1.5; }
+    #start-btn {
+      background: #00aaff; color: #fff; border: none; padding: 18px 45px;
+      font-size: 20px; font-weight: bold; border-radius: 40px; margin-top: 30px;
+      box-shadow: 0 4px 15px rgba(0, 170, 255, 0.4); cursor: pointer;
+    }
+
+    /* HUD (UI表示) */
+    #ui-layer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+      display: flex; flex-direction: column; justify-content: space-between; padding: 20px;
+      pointer-events: none;
+    }
+
+    .hud-header {
+      display: flex; justify-content: space-between; align-items: center;
+      color: #00aaff; font-size: 18px; font-weight: 800;
+      background: rgba(255, 255, 255, 0.88); padding: 10px 20px; border-radius: 30px;
+      box-shadow: 0 2px 10px rgba(0, 150, 255, 0.15); border: 1px solid rgba(0, 170, 255, 0.3);
+    }
+
+    /* ロックオン状態表示バナー */
+    #lockon-indicator {
+      font-size: 14px; font-weight: bold; color: #ff3366;
+      transition: color 0.2s ease;
+    }
+    #lockon-indicator.locked { color: #00cc66; }
+
+    /* 中央照準 */
+    .crosshair {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 70px; height: 70px; border: 3px solid rgba(0, 170, 255, 0.8); border-radius: 50%;
+      pointer-events: none; box-shadow: 0 0 10px rgba(0, 170, 255, 0.3);
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .crosshair::after {
+      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 10px; height: 10px; background: #00aaff; border-radius: 50%;
+      transition: background 0.15s ease;
+    }
+
+    /* 赤検出（ロックオン）時に照準が変化 */
+    .crosshair.detected {
+      border-color: #ff0055 !important;
+      transform: translate(-50%, -50%) scale(1.15);
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.6) !important;
+    }
+    .crosshair.detected::after {
+      background: #ff0055 !important;
+    }
+
+    /* 射撃・命中フラッシュ */
+    #hit-flash {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;
+      background: rgba(0, 200, 255, 0.35); opacity: 0; transition: opacity 0.08s ease;
+      pointer-events: none;
+    }
+    #shot-flash {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4;
+      background: rgba(255, 255, 255, 0.3); opacity: 0; transition: opacity 0.05s ease;
+      pointer-events: none;
+    }
+
+    /* リザルト画面 */
+    #result-modal {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100;
+      background: rgba(255, 255, 255, 0.96); color: #0077bb; display: none;
+      flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center;
+    }
+    #result-modal h1 { color: #0099e6; font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+    .score-box {
+      font-size: 42px; font-weight: 900; color: #00aaff; margin: 20px 0;
+      text-shadow: 0 2px 10px rgba(0, 170, 255, 0.2);
+    }
+    .btn-retry {
+      background: #00aaff; color: #fff; border: none; padding: 16px 40px;
+      font-size: 18px; font-weight: bold; border-radius: 30px; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- カメラ描画領域 -->
+  <video id="camera-feed" autoplay playsinline muted></video>
+  <canvas id="proc-canvas" width="160" height="120"></canvas>
+
+  <!-- スタート画面 -->
+  <div id="start-overlay">
+    <h2>コースターシューティング</h2>
+    <p>画面中央の照準で<br>「赤いターゲット」を捉えて撃ち抜こう！</p>
+    <button id="start-btn">GAME START</button>
+  </div>
+
+  <!-- HUD -->
+  <div id="ui-layer">
+    <div class="hud-header">
+      <div>SCORE: <span id="score-val">0</span></div>
+      <div id="lockon-indicator">SEARCHING...</div>
+    </div>
+    <div class="crosshair" id="crosshair"></div>
+  </div>
+
+  <div id="hit-flash"></div>
+  <div id="shot-flash"></div>
+
+  <!-- リザルト画面 -->
+  <div id="result-modal">
+    <h1>MISSION COMPLETE!</h1>
+    <p>作戦完了！最終スコア</p>
+    <div class="score-box"><span id="final-score">0</span> <span style="font-size:20px;">PT</span></div>
+    <button class="btn-retry" onclick="location.reload()">もう一度リトライ</button>
+  </div>
+
+  <script>
+    let score = 0;
+    let isRedDetected = false;
+    let isCoolingDown = false;
+    let isGameStarted = false;
+
+    const videoEl = document.getElementById('camera-feed');
+    const canvasEl = document.getElementById('proc-canvas');
+    const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
+
+    const scoreVal = document.getElementById('score-val');
+    const lockonIndicator = document.getElementById('lockon-indicator');
+    const crosshair = document.getElementById('crosshair');
+    const hitFlash = document.getElementById('hit-flash');
+    const shotFlash = document.getElementById('shot-flash');
+    const startOverlay = document.getElementById('start-overlay');
+    const startBtn = document.getElementById('start-btn');
+
+    let audioCtx;
+
+    function playShotSE() {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+    }
+
+    function playHitSE() {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    // カメラ起動処理
+    startBtn.addEventListener('click', async () => {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        videoEl.srcObject = stream;
+        await videoEl.play();
+
+        startOverlay.style.display = 'none';
+        isGameStarted = true;
+
+        // 色判定ループ（1秒間に約30フレーム解析）
+        requestAnimationFrame(processFrame);
+
+        // 40秒タイマー
+        setTimeout(() => {
+          document.getElementById('result-modal').style.display = 'flex';
+          document.getElementById('final-score').textContent = score;
+        }, 40000);
+
+      } catch (err) {
+        alert("カメラ起動エラー: " + err.message + "\nカメラの使用許可を確認してください。");
+      }
+    });
+
+    // RGBからHSV（色相・飽和度・明度）への高速変換処理
+    function rgbToHsv(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const d = max - min;
+      let h = 0;
+      const s = max === 0 ? 0 : d / max;
+      const v = max;
+
+      if (max !== min) {
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return [h * 360, s, v]; // Hue: 0-360, Saturation: 0-1, Value: 0-1
+    }
+
+    // 画面の中央部分に「一定以上の赤いピクセル」があるか判定
+    function processFrame() {
+      if (!isGameStarted) return;
+
+      // ビデオフレームを160x120キャンバスに描画（処理負荷軽減のため軽量化）
+      ctx.drawImage(videoEl, 0, 0, 160, 120);
+
+      // 画面中央付近（中心30%の枠内）のみを色チェック対象にする
+      const startX = 56;  // 160 * 0.35
+      const startY = 42;  // 120 * 0.35
+      const width = 48;   // 160 * 0.30
+      const height = 36;  // 120 * 0.30
+
+      const imgData = ctx.getImageData(startX, startY, width, height);
+      const data = imgData.data;
+
+      let redPixelCount = 0;
+      const totalPixels = width * height;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const [h, s, v] = rgbToHsv(r, g, b);
+
+        // 赤色の判定条件：
+        // 色相（H）が赤の範囲（340°〜360° または 0°〜18°）かつ 鮮やかさ（S）> 0.45 かつ 明るさ（V）> 0.3
+        if ((h >= 340 || h <= 18) && s > 0.45 && v > 0.3) {
+          redPixelCount++;
+        }
+      }
+
+      // 中央エリアの12%以上が「赤色」ならロックオン成功と判定
+      if (redPixelCount / totalPixels > 0.12) {
+        if (!isRedDetected) {
+          isRedDetected = true;
+          lockonIndicator.textContent = "🎯 TARGET LOCKED!";
+          lockonIndicator.classList.add('locked');
+          crosshair.classList.add('detected');
+        }
+      } else {
+        if (isRedDetected) {
+          isRedDetected = false;
+          lockonIndicator.textContent = "SEARCHING...";
+          lockonIndicator.classList.remove('locked');
+          crosshair.classList.remove('detected');
+        }
+      }
+
+      requestAnimationFrame(processFrame);
+    }
+
+    // 画面タップで射撃
+    window.addEventListener('pointerdown', (e) => {
+      if (!isGameStarted || e.target === startBtn || e.target.classList.contains('btn-retry')) return;
+
+      playShotSE();
+      shotFlash.style.opacity = '1';
+      setTimeout(() => { shotFlash.style.opacity = '0'; }, 50);
+
+      if (isRedDetected && !isCoolingDown) {
+        score += 100;
+        scoreVal.textContent = score;
+        playHitSE();
+
+        hitFlash.style.opacity = '1';
+        setTimeout(() => { hitFlash.style.opacity = '0'; }, 120);
+
+        isCoolingDown = true;
+        setTimeout(() => { isCoolingDown = false; }, 800);
+      }
+    });
+  </script>
+</body>
+</html>

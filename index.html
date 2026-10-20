@@ -9,21 +9,34 @@
     @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800;900&display=swap');
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body, html {
-      width: 100vw; height: 100vh; overflow: hidden;
+    
+    /* 画面全体を固定してスクロールやバーによるガタつきを防止 */
+    html, body {
+      width: 100%; height: 100%;
+      height: 100vh; height: -webkit-fill-available;
+      overflow: hidden;
       font-family: 'M PLUS Rounded 1c', sans-serif;
       background: #0f2412;
+      position: fixed; top: 0; left: 0;
     }
 
-    /* 背景カメラ映像 */
+    /* フルスクリーン用コンテナ */
+    #game-container {
+      width: 100vw; height: 100vh;
+      height: -webkit-fill-available;
+      position: relative;
+      overflow: hidden;
+    }
+
     #camera-feed {
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      position: absolute; top: 0; left: 0;
+      width: 100vw; height: 100vh;
       object-fit: cover; z-index: 1;
     }
 
     #proc-canvas { display: none; }
 
-    /* --- 木目調・ジャングル看板スタイル --- */
+    /* 木目調・ジャングルUI */
     .wooden-panel {
       background: linear-gradient(180deg, #8b5a2b 0%, #5c3a17 100%);
       border: 3px solid #3d230d;
@@ -40,7 +53,7 @@
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
 
-    /* --- スタート画面（横画面用にサイズと余白を最適化） --- */
+    /* スタート画面 */
     #start-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999;
       background: radial-gradient(circle, rgba(16, 42, 20, 0.88) 0%, rgba(5, 18, 8, 0.96) 100%);
@@ -49,7 +62,7 @@
     }
 
     .start-board {
-      width: 80%; max-width: 520px; padding: 18px 25px; text-align: center;
+      width: 85%; max-width: 520px; padding: 18px 25px; text-align: center;
     }
     .start-board h1 {
       font-size: clamp(18px, 4vw, 26px); font-weight: 900; color: #ffe600;
@@ -66,7 +79,6 @@
       border: 1.5px solid #3d230d; text-shadow: 1px 1px 2px #000;
     }
 
-    /* 立体ゴールドボタン */
     .btn-gold {
       background: linear-gradient(180deg, #ffe600 0%, #ff9900 100%);
       color: #3d1e00; border: 2.5px solid #fff; padding: 10px 32px;
@@ -76,7 +88,7 @@
     }
     .btn-gold:active { transform: translateY(3px); box-shadow: 0 1px 0 #a65100; }
 
-    /* --- HUD（横画面用レイアウト） --- */
+    /* HUD */
     #ui-layer {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10;
       display: flex; flex-direction: column; justify-content: space-between; padding: 10px 20px;
@@ -96,7 +108,6 @@
     }
     #lockon-indicator.locked { color: #ff3d00; text-shadow: 0 0 8px #ff3d00, 1px 1px 0 #000; }
 
-    /* --- 広域照準（横画面フィット） --- */
     .crosshair {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       width: min(50vw, 55vh); height: min(50vw, 55vh);
@@ -109,7 +120,6 @@
       font-size: clamp(20px, 4vh, 32px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
 
-    /* ロックオン時（赤検知時） */
     .crosshair.detected {
       border: 5px solid #ff1744 !important;
       background: rgba(255, 23, 68, 0.2);
@@ -117,7 +127,6 @@
       box-shadow: 0 0 30px rgba(255, 23, 68, 0.9) !important;
     }
 
-    /* フラッシュ演出 */
     #hit-flash {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 5;
       background: rgba(255, 230, 0, 0.4); opacity: 0; transition: opacity 0.08s ease;
@@ -129,7 +138,6 @@
       pointer-events: none;
     }
 
-    /* --- リザルト画面 --- */
     #result-modal {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
       background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
@@ -151,40 +159,37 @@
 </head>
 <body>
 
-  <!-- カメラ描画領域 -->
-  <video id="camera-feed" autoplay playsinline muted></video>
-  <canvas id="proc-canvas" width="160" height="120"></canvas>
+  <div id="game-container">
+    <video id="camera-feed" autoplay playsinline muted></video>
+    <canvas id="proc-canvas" width="160" height="120"></canvas>
 
-  <!-- スタート画面 -->
-  <div id="start-overlay">
-    <div class="wooden-panel start-board">
-      <h1>松野先生救出作戦</h1>
-      <div class="subtitle">🌴 ジャングル危険地帯 🗿</div>
-      <p>暴走ロボットとマッドサイエンティストを倒し、解毒薬を手に入れて松野先生を救出せよ！</p>
-      <button id="start-btn" class="btn-gold">ミッション開始</button>
+    <div id="start-overlay">
+      <div class="wooden-panel start-board">
+        <h1>松野先生救出作戦</h1>
+        <div class="subtitle">🌴 ジャングル危険地帯 🗿</div>
+        <p>暴走ロボットとマッドサイエンティストを倒し、解毒薬を手に入れて松野先生を救出せよ！</p>
+        <button id="start-btn" class="btn-gold">ミッション開始</button>
+      </div>
     </div>
-  </div>
 
-  <!-- HUD -->
-  <div id="ui-layer">
-    <div class="hud-header wooden-panel">
-      <div class="score-badge">🏆 SCORE: <span id="score-val">0</span></div>
-      <div id="lockon-indicator">🔍 ターゲット捜索中...</div>
+    <div id="ui-layer">
+      <div class="hud-header wooden-panel">
+        <div class="score-badge">🏆 SCORE: <span id="score-val">0</span></div>
+        <div id="lockon-indicator">🔍 ターゲット捜索中...</div>
+      </div>
+      <div class="crosshair" id="crosshair"></div>
     </div>
-    <!-- 広域照準枠 -->
-    <div class="crosshair" id="crosshair"></div>
-  </div>
 
-  <div id="hit-flash"></div>
-  <div id="shot-flash"></div>
+    <div id="hit-flash"></div>
+    <div id="shot-flash"></div>
 
-  <!-- リザルト画面 -->
-  <div id="result-modal">
-    <div class="wooden-panel result-board">
-      <h1>MISSION COMPLETE!</h1>
-      <p>松野先生の救出に成功しました！</p>
-      <div class="score-box"><span id="final-score">0</span><span style="font-size:20px;"> PT</span></div>
-      <button class="btn-gold" onclick="location.reload()">もう一度挑戦</button>
+    <div id="result-modal">
+      <div class="wooden-panel result-board">
+        <h1>MISSION COMPLETE!</h1>
+        <p>松野先生の救出に成功しました！</p>
+        <div class="score-box"><span id="final-score">0</span><span style="font-size:20px;"> PT</span></div>
+        <button class="btn-gold" onclick="location.reload()">もう一度挑戦</button>
+      </div>
     </div>
   </div>
 
@@ -194,6 +199,7 @@
     let isCoolingDown = false;
     let isGameStarted = false;
 
+    const gameContainer = document.getElementById('game-container');
     const videoEl = document.getElementById('camera-feed');
     const canvasEl = document.getElementById('proc-canvas');
     const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
@@ -208,67 +214,105 @@
 
     let audioCtx;
 
+    // 全画面表示（フルスクリーン）に切り替える関数
+    function requestFullScreen() {
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      } else if (docEl.webkitRequestFullscreen) { /* Safari (iOS/Mac) */
+        docEl.webkitRequestFullscreen().catch(() => {});
+      } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen().catch(() => {});
+      }
+      
+      // アドレスバー非表示のための自動スクロール処理
+      window.scrollTo(0, 1);
+    }
+
     function playShotSE() {
       if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.12);
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+      } catch (e) {}
     }
 
     function playHitSE() {
       if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(450, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.22);
-      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.22);
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.22);
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.22);
+      } catch (e) {}
     }
 
     startBtn.addEventListener('click', async () => {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      // 1. フルスクリーン化を要求
+      requestFullScreen();
 
       try {
-        // 横画面（アスペクト比 16:9 / 横幅優先）でカメラを起動
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
-          audio: false
-        });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+      } catch (e) {}
 
-        videoEl.srcObject = stream;
-        await videoEl.play();
+      // 2. カメラ起動処理
+      const constraintsList = [
+        { video: { facingMode: { exact: "environment" } }, audio: false },
+        { video: { facingMode: "environment" }, audio: false },
+        { video: true, audio: false }
+      ];
 
-        startOverlay.style.display = 'none';
-        isGameStarted = true;
+      let stream = null;
+      let lastErr = null;
 
-        requestAnimationFrame(processFrame);
-
-        setTimeout(() => {
-          document.getElementById('result-modal').style.display = 'flex';
-          document.getElementById('final-score').textContent = score;
-        }, 40000);
-
-      } catch (err) {
-        alert("カメラ起動エラー: " + err.message + "\nカメラのアクセス許可を確認してください。");
+      for (const constraints of constraintsList) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (stream) break;
+        } catch (err) {
+          lastErr = err;
+        }
       }
+
+      if (!stream) {
+        alert("カメラの起動に失敗しました。\n・カメラの使用を許可してください\n・他のアプリを終了させてください");
+        return;
+      }
+
+      videoEl.srcObject = stream;
+
+      try {
+        await videoEl.play();
+      } catch (e) {
+        console.log("Play interrupted", e);
+      }
+
+      startOverlay.style.display = 'none';
+      isGameStarted = true;
+
+      requestAnimationFrame(processFrame);
+
+      setTimeout(() => {
+        document.getElementById('result-modal').style.display = 'flex';
+        document.getElementById('final-score').textContent = score;
+      }, 40000);
     });
 
     function rgbToHsv(r, g, b) {
@@ -293,45 +337,46 @@
     function processFrame() {
       if (!isGameStarted) return;
 
-      ctx.drawImage(videoEl, 0, 0, 160, 120);
+      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+        ctx.drawImage(videoEl, 0, 0, 160, 120);
 
-      // 横画面中央の広域スキャン領域
-      const startX = 32;
-      const startY = 24;
-      const width = 96;
-      const height = 72;
+        const startX = 32;
+        const startY = 24;
+        const width = 96;
+        const height = 72;
 
-      const imgData = ctx.getImageData(startX, startY, width, height);
-      const data = imgData.data;
+        const imgData = ctx.getImageData(startX, startY, width, height);
+        const data = imgData.data;
 
-      let redPixelCount = 0;
-      const totalPixels = width * height;
+        let redPixelCount = 0;
+        const totalPixels = width * height;
 
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
 
-        const [h, s, v] = rgbToHsv(r, g, b);
+          const [h, s, v] = rgbToHsv(r, g, b);
 
-        if ((h >= 335 || h <= 22) && s > 0.40 && v > 0.28) {
-          redPixelCount++;
+          if ((h >= 335 || h <= 22) && s > 0.40 && v > 0.28) {
+            redPixelCount++;
+          }
         }
-      }
 
-      if (redPixelCount / totalPixels > 0.05) {
-        if (!isRedDetected) {
-          isRedDetected = true;
-          lockonIndicator.textContent = "🎯 ターゲット捕捉！";
-          lockonIndicator.classList.add('locked');
-          crosshair.classList.add('detected');
-        }
-      } else {
-        if (isRedDetected) {
-          isRedDetected = false;
-          lockonIndicator.textContent = "🔍 ターゲット捜索中...";
-          lockonIndicator.classList.remove('locked');
-          crosshair.classList.remove('detected');
+        if (redPixelCount / totalPixels > 0.05) {
+          if (!isRedDetected) {
+            isRedDetected = true;
+            lockonIndicator.textContent = "🎯 ターゲット捕捉！";
+            lockonIndicator.classList.add('locked');
+            crosshair.classList.add('detected');
+          }
+        } else {
+          if (isRedDetected) {
+            isRedDetected = false;
+            lockonIndicator.textContent = "🔍 ターゲット捜索中...";
+            lockonIndicator.classList.remove('locked');
+            crosshair.classList.remove('detected');
+          }
         }
       }
 
@@ -360,4 +405,5 @@
   </script>
 </body>
 </html>
+
 

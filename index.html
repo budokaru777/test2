@@ -6,8 +6,14 @@
   <title>ジャングル探検隊 - 松野先生救出シューティング</title>
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800;900&display=swap');
+
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'Arial Rounded MT Bold', -apple-system, sans-serif; background: #0e1e11; }
+    body, html {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: 'M PLUS Rounded 1c', sans-serif;
+      background: #0f2412;
+    }
 
     /* 背景カメラ映像 */
     #camera-feed {
@@ -15,37 +21,63 @@
       object-fit: cover; z-index: 1;
     }
 
-    /* 画像解析用隠しキャンバス */
     #proc-canvas { display: none; }
 
-    /* スタート画面 (ジャングル・トレジャーハンター風) */
+    /* --- 木目調・ジャングル看板スタイルの共通パーツ --- */
+    .wooden-panel {
+      background: linear-gradient(180deg, #8b5a2b 0%, #5c3a17 100%);
+      border: 4px solid #3d230d;
+      border-radius: 20px;
+      box-shadow: 0 8px 0 #261507, inset 0 3px 0 rgba(255,255,255,0.3), 0 10px 20px rgba(0,0,0,0.6);
+      position: relative;
+    }
+    /* つる草・葉っぱの装飾アクセント */
+    .wooden-panel::before {
+      content: '🌿'; position: absolute; top: -14px; left: -10px; font-size: 26px; transform: rotate(-20deg);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+    .wooden-panel::after {
+      content: '🍃'; position: absolute; bottom: -10px; right: -8px; font-size: 24px; transform: rotate(15deg);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+
+    /* --- スタート画面 --- */
     #start-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 999;
-      background: radial-gradient(circle, rgba(20, 45, 25, 0.95) 0%, rgba(8, 20, 10, 0.98) 100%);
+      background: radial-gradient(circle, rgba(16, 42, 20, 0.88) 0%, rgba(5, 18, 8, 0.96) 100%);
       display: flex; flex-direction: column; justify-content: center; align-items: center;
-      color: #f0e6d2; text-align: center; padding: 25px; border: 8px solid #2d5a32;
+      padding: 20px;
     }
-    #start-overlay h1 {
-      font-size: 26px; font-weight: 900; color: #ffd700; text-shadow: 2px 2px 4px #000;
-      letter-spacing: 1px; margin-bottom: 8px;
-    }
-    #start-overlay .subtitle {
-      font-size: 15px; color: #76cd83; font-weight: bold; margin-bottom: 18px;
-    }
-    #start-overlay p {
-      font-size: 13px; color: #d0e0d2; line-height: 1.6; max-width: 320px;
-      background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; border: 1px solid #3e7044;
-    }
-    #start-btn {
-      background: linear-gradient(180deg, #ffd700 0%, #e6a100 100%);
-      color: #1a331c; border: 2px solid #fff; padding: 18px 45px;
-      font-size: 22px; font-weight: 900; border-radius: 40px; margin-top: 25px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6); cursor: pointer;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.4);
-    }
-    #start-btn:active { transform: scale(0.96); }
 
-    /* HUD (UI表示) */
+    .start-board {
+      width: 90%; max-width: 360px; padding: 25px 20px; text-align: center;
+    }
+    .start-board h1 {
+      font-size: 24px; font-weight: 900; color: #ffe600;
+      text-shadow: 3px 3px 0 #5c2c00, -2px -2px 0 #5c2c00, 2px -2px 0 #5c2c00, -2px 2px 0 #5c2c00;
+      letter-spacing: 1px; margin-bottom: 6px;
+    }
+    .start-board .subtitle {
+      font-size: 14px; color: #76ff03; font-weight: 900;
+      text-shadow: 1px 1px 2px #000; margin-bottom: 15px;
+    }
+    .start-board p {
+      font-size: 13px; color: #fff; line-height: 1.5; font-weight: 800;
+      background: rgba(0,0,0,0.35); padding: 12px; border-radius: 12px;
+      border: 2px solid #3d230d; text-shadow: 1px 1px 2px #000;
+    }
+
+    /* ゴールド・ぷっくり立体ボタン */
+    .btn-gold {
+      background: linear-gradient(180deg, #ffe600 0%, #ff9900 100%);
+      color: #3d1e00; border: 3px solid #fff; padding: 16px 40px;
+      font-size: 22px; font-weight: 900; border-radius: 50px; margin-top: 22px;
+      box-shadow: 0 6px 0 #a65100, 0 10px 15px rgba(0,0,0,0.5); cursor: pointer;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.6); transition: transform 0.1s;
+    }
+    .btn-gold:active { transform: translateY(4px); box-shadow: 0 2px 0 #a65100; }
+
+    /* --- HUD（ヘッダーUI） --- */
     #ui-layer {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
       display: flex; flex-direction: column; justify-content: space-between; padding: 15px;
@@ -53,72 +85,68 @@
     }
 
     .hud-header {
-      display: flex; justify-content: space-between; align-items: center;
-      color: #ffd700; font-size: 16px; font-weight: 900;
-      background: rgba(14, 30, 17, 0.85); padding: 10px 18px; border-radius: 20px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); border: 2px solid #3e7044;
+      display: flex; justify-content: space-between; align-items: center; padding: 10px 16px;
+    }
+    .score-badge {
+      font-size: 18px; font-weight: 900; color: #ffe600;
+      text-shadow: 2px 2px 0 #000; display: flex; align-items: center; gap: 6px;
     }
 
-    /* ロックオン状態表示バナー */
     #lockon-indicator {
-      font-size: 13px; font-weight: bold; color: #a0c8a5;
+      font-size: 13px; font-weight: 900; color: #b2ff59; text-shadow: 1px 1px 2px #000;
     }
-    #lockon-indicator.locked { color: #ff4500; text-shadow: 0 0 8px #ff4500; }
+    #lockon-indicator.locked { color: #ff3d00; text-shadow: 0 0 8px #ff3d00, 1px 1px 0 #000; }
 
-    /* 広範囲照準枠 (広領域検知) */
+    /* --- 照準デザイン（古代遺跡・探検隊風） --- */
     .crosshair {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 220px; height: 220px; /* 検知エリアを画面大きく拡大 */
-      border: 2px dashed rgba(255, 215, 0, 0.6); border-radius: 18px;
+      width: 220px; height: 220px;
+      border: 3px dashed rgba(255, 230, 0, 0.75); border-radius: 24px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
       pointer-events: none; transition: all 0.15s ease;
     }
     .crosshair::after {
-      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 14px; height: 14px; background: #ffd700; border-radius: 50%;
-      box-shadow: 0 0 10px #ffd700;
+      content: '🎯'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
 
-    /* ターゲットロックオン時（赤検知時） */
+    /* ロックオン時（赤検知時） */
     .crosshair.detected {
-      border: 4px solid #ff0033 !important;
-      background: rgba(255, 0, 51, 0.15);
-      transform: translate(-50%, -50%) scale(1.05);
-      box-shadow: 0 0 25px rgba(255, 0, 51, 0.8) !important;
-    }
-    .crosshair.detected::after {
-      background: #ff0033 !important; box-shadow: 0 0 12px #ff0033;
+      border: 5px solid #ff1744 !important;
+      background: rgba(255, 23, 68, 0.2);
+      transform: translate(-50%, -50%) scale(1.06);
+      box-shadow: 0 0 30px rgba(255, 23, 68, 0.9) !important;
     }
 
     /* フラッシュ演出 */
     #hit-flash {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;
-      background: rgba(255, 215, 0, 0.35); opacity: 0; transition: opacity 0.08s ease;
+      background: rgba(255, 230, 0, 0.4); opacity: 0; transition: opacity 0.08s ease;
       pointer-events: none;
     }
     #shot-flash {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4;
-      background: rgba(255, 255, 255, 0.25); opacity: 0; transition: opacity 0.05s ease;
+      background: rgba(255, 255, 255, 0.3); opacity: 0; transition: opacity 0.05s ease;
       pointer-events: none;
     }
 
-    /* リザルト画面 */
+    /* --- リザルト画面 --- */
     #result-modal {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100;
-      background: radial-gradient(circle, rgba(20, 45, 25, 0.98) 0%, rgba(8, 20, 10, 1) 100%);
-      color: #f0e6d2; display: none; flex-direction: column; align-items: center;
-      justify-content: center; padding: 30px; text-align: center; border: 8px solid #2d5a32;
+      background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
+      display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
     }
-    #result-modal h1 { color: #ffd700; font-size: 28px; font-weight: 900; margin-bottom: 8px; text-shadow: 2px 2px 4px #000; }
-    #result-modal p { color: #76cd83; font-size: 15px; }
+    .result-board {
+      width: 90%; max-width: 360px; padding: 30px 20px; text-align: center;
+    }
+    .result-board h1 {
+      font-size: 26px; font-weight: 900; color: #ffe600;
+      text-shadow: 3px 3px 0 #5c2c00; margin-bottom: 6px;
+    }
+    .result-board p { color: #76ff03; font-size: 15px; font-weight: 900; }
     .score-box {
-      font-size: 48px; font-weight: 900; color: #ffffff; margin: 20px 0;
-      text-shadow: 0 0 15px #ffd700, 2px 2px 0 #000;
-    }
-    .btn-retry {
-      background: linear-gradient(180deg, #ffd700 0%, #e6a100 100%);
-      color: #1a331c; border: none; padding: 16px 40px;
-      font-size: 18px; font-weight: 900; border-radius: 30px; cursor: pointer;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      font-size: 52px; font-weight: 900; color: #fff; margin: 15px 0;
+      text-shadow: 3px 3px 0 #e65100, 0 0 15px #ff9100;
     }
   </style>
 </head>
@@ -130,17 +158,19 @@
 
   <!-- スタート画面 -->
   <div id="start-overlay">
-    <h1>松野先生救出作戦</h1>
-    <div class="subtitle">〜 ジャングル危険地帯 〜</div>
-    <p>暴走ロボットとマッチョマッドサイエンティストを撃破し、解毒薬を手に入れて松野先生を救い出せ！</p>
-    <button id="start-btn">ミッション開始</button>
+    <div class="wooden-panel start-board">
+      <h1>松野先生救出作戦</h1>
+      <div class="subtitle">🌴 ジャングル危険地帯 🗿</div>
+      <p>暴走ロボットとマッドサイエンティストを倒し、解毒薬を手に入れて松野先生を救出せよ！</p>
+      <button id="start-btn" class="btn-gold">ミッション開始</button>
+    </div>
   </div>
 
   <!-- HUD -->
   <div id="ui-layer">
-    <div class="hud-header">
-      <div>SCORE: <span id="score-val">0</span></div>
-      <div id="lockon-indicator">ターゲット捜索中...</div>
+    <div class="hud-header wooden-panel">
+      <div class="score-badge">🏆 SCORE: <span id="score-val">0</span></div>
+      <div id="lockon-indicator">🔍 ターゲット捜索中...</div>
     </div>
     <!-- 広域照準枠 -->
     <div class="crosshair" id="crosshair"></div>
@@ -151,10 +181,12 @@
 
   <!-- リザルト画面 -->
   <div id="result-modal">
-    <h1>MISSION COMPLETE!</h1>
-    <p>松野先生の救出に成功しました！</p>
-    <div class="score-box"><span id="final-score">0</span> <span style="font-size:22px;">PT</span></div>
-    <button class="btn-retry" onclick="location.reload()">もう一度挑戦する</button>
+    <div class="wooden-panel result-board">
+      <h1>MISSION COMPLETE!</h1>
+      <p>松野先生の救出に成功しました！</p>
+      <div class="score-box"><span id="final-score">0</span><span style="font-size:22px;"> PT</span></div>
+      <button class="btn-gold" onclick="location.reload()">もう一度挑戦</button>
+    </div>
   </div>
 
   <script>
@@ -177,7 +209,6 @@
 
     let audioCtx;
 
-    // 銃声・命中音 SE
     function playShotSE() {
       if (!audioCtx) return;
       const osc = audioCtx.createOscillator();
@@ -208,7 +239,6 @@
       osc.stop(audioCtx.currentTime + 0.22);
     }
 
-    // カメラ起動処理
     startBtn.addEventListener('click', async () => {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -231,18 +261,16 @@
 
         requestAnimationFrame(processFrame);
 
-        // 40秒で終了
         setTimeout(() => {
           document.getElementById('result-modal').style.display = 'flex';
           document.getElementById('final-score').textContent = score;
         }, 40000);
 
       } catch (err) {
-        alert("カメラ起動エラー: " + err.message + "\nカメラ許可を確認してください。");
+        alert("カメラ起動エラー: " + err.message + "\nカメラのアクセス許可を確認してください。");
       }
     });
 
-    // RGB → HSV 高速色変換
     function rgbToHsv(r, g, b) {
       r /= 255; g /= 255; b /= 255;
       const max = Math.max(r, g, b), min = Math.min(r, g, b);
@@ -262,17 +290,15 @@
       return [h * 360, s, v];
     }
 
-    // 広範囲（画面全体の60%領域）の赤色解析処理
     function processFrame() {
       if (!isGameStarted) return;
 
       ctx.drawImage(videoEl, 0, 0, 160, 120);
 
-      // 広域スキャン領域（画面中心の60%の範囲）
-      const startX = 32;  // 160 * 0.20
-      const startY = 24;  // 120 * 0.20
-      const width = 96;   // 160 * 0.60
-      const height = 72;  // 120 * 0.60
+      const startX = 32;
+      const startY = 24;
+      const width = 96;
+      const height = 72;
 
       const imgData = ctx.getImageData(startX, startY, width, height);
       const data = imgData.data;
@@ -287,13 +313,11 @@
 
         const [h, s, v] = rgbToHsv(r, g, b);
 
-        // 赤色判定条件（遠くの小さめの赤でも捉えられるよう判定閾値を少し広げました）
         if ((h >= 335 || h <= 22) && s > 0.40 && v > 0.28) {
           redPixelCount++;
         }
       }
 
-      // 領域内の5%以上に赤色が入っていればロックオン成功（遠距離対応）
       if (redPixelCount / totalPixels > 0.05) {
         if (!isRedDetected) {
           isRedDetected = true;
@@ -304,7 +328,7 @@
       } else {
         if (isRedDetected) {
           isRedDetected = false;
-          lockonIndicator.textContent = "ターゲット捜索中...";
+          lockonIndicator.textContent = "🔍 ターゲット捜索中...";
           lockonIndicator.classList.remove('locked');
           crosshair.classList.remove('detected');
         }
@@ -313,9 +337,8 @@
       requestAnimationFrame(processFrame);
     }
 
-    // 画面タップで攻撃
     window.addEventListener('pointerdown', (e) => {
-      if (!isGameStarted || e.target === startBtn || e.target.classList.contains('btn-retry')) return;
+      if (!isGameStarted || e.target === startBtn || e.target.classList.contains('btn-gold')) return;
 
       playShotSE();
       shotFlash.style.opacity = '1';

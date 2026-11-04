@@ -10,7 +10,6 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     
-    /* 画面全体を固定してスクロールやバーによるガタつきを防止 */
     html, body {
       width: 100%; height: 100%;
       height: 100vh; height: -webkit-fill-available;
@@ -20,7 +19,6 @@
       position: fixed; top: 0; left: 0;
     }
 
-    /* フルスクリーン用コンテナ */
     #game-container {
       width: 100vw; height: 100vh;
       height: -webkit-fill-available;
@@ -36,7 +34,6 @@
 
     #proc-canvas { display: none; }
 
-    /* 木目調・ジャングルUI */
     .wooden-panel {
       background: linear-gradient(180deg, #8b5a2b 0%, #5c3a17 100%);
       border: 3px solid #3d230d;
@@ -127,14 +124,33 @@
       box-shadow: 0 0 30px rgba(255, 23, 68, 0.9) !important;
     }
 
+    /* 警告・ボスUI */
+    #warning-overlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 50;
+      background: rgba(255, 0, 0, 0.3); display: none; flex-direction: column;
+      justify-content: center; align-items: center; pointer-events: none;
+      animation: blink 0.5s infinite alternate;
+    }
+    @keyframes blink { from { opacity: 0.3; } to { opacity: 0.8; } }
+
+    #warning-text {
+      font-size: clamp(32px, 8vw, 64px); font-weight: 900; color: #ff1744;
+      text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000;
+      letter-spacing: 4px;
+    }
+
+    #boss-hp-container {
+      position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+      width: 80%; max-width: 400px; display: none; flex-direction: column;
+      align-items: center; z-index: 20;
+    }
+    .boss-label { font-size: 16px; font-weight: 900; color: #ff3d00; text-shadow: 1px 1px 2px #000; margin-bottom: 4px; }
+    .hp-bar-bg { width: 100%; height: 20px; background: #333; border: 2px solid #fff; border-radius: 10px; overflow: hidden; }
+    .hp-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff1744, #ff9100); transition: width 0.2s ease; }
+
     #hit-flash {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 5;
       background: rgba(255, 230, 0, 0.4); opacity: 0; transition: opacity 0.08s ease;
-      pointer-events: none;
-    }
-    #shot-flash {
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 4;
-      background: rgba(255, 255, 255, 0.3); opacity: 0; transition: opacity 0.05s ease;
       pointer-events: none;
     }
 
@@ -143,18 +159,10 @@
       background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
       display: none; flex-direction: column; align-items: center; justify-content: center; padding: 15px;
     }
-    .result-board {
-      width: 80%; max-width: 480px; padding: 20px; text-align: center;
-    }
-    .result-board h1 {
-      font-size: clamp(20px, 4.5vw, 28px); font-weight: 900; color: #ffe600;
-      text-shadow: 2px 2px 0 #5c2c00; margin-bottom: 4px;
-    }
+    .result-board { width: 80%; max-width: 480px; padding: 20px; text-align: center; }
+    .result-board h1 { font-size: clamp(20px, 4.5vw, 28px); font-weight: 900; color: #ffe600; text-shadow: 2px 2px 0 #5c2c00; margin-bottom: 4px; }
     .result-board p { color: #76ff03; font-size: clamp(12px, 2.5vw, 15px); font-weight: 900; }
-    .score-box {
-      font-size: clamp(36px, 8vw, 54px); font-weight: 900; color: #fff; margin: 10px 0;
-      text-shadow: 3px 3px 0 #e65100, 0 0 15px #ff9100;
-    }
+    .score-box { font-size: clamp(36px, 8vw, 54px); font-weight: 900; color: #fff; margin: 10px 0; text-shadow: 3px 3px 0 #e65100, 0 0 15px #ff9100; }
   </style>
 </head>
 <body>
@@ -166,8 +174,8 @@
     <div id="start-overlay">
       <div class="wooden-panel start-board">
         <h1>松野先生救出作戦</h1>
-        <div class="subtitle">🌴 ジャングル危険地帯 🗿</div>
-        <p>暴走ロボットとマッドサイエンティストを倒し、解毒薬を手に入れて松野先生を救出せよ！</p>
+        <div class="subtitle">🌴 ハンズフリー・自動エイムモード 🗿</div>
+        <p>カメラを赤い標的に向けるだけで自動発射！コースターの上から標的を撃ち抜け！</p>
         <button id="start-btn" class="btn-gold">ミッション開始</button>
       </div>
     </div>
@@ -180,8 +188,19 @@
       <div class="crosshair" id="crosshair"></div>
     </div>
 
+    <!-- ボスHPUI -->
+    <div id="boss-hp-container">
+      <div class="boss-label">🤖 BOSS: 暴走マッドロボ</div>
+      <div class="hp-bar-bg"><div id="boss-hp-fill" class="hp-bar-fill"></div></div>
+    </div>
+
+    <!-- 警告表示 -->
+    <div id="warning-overlay">
+      <div id="warning-text">⚠️ WARNING ⚠️</div>
+      <div style="color:#fff; font-weight:900; font-size:20px; text-shadow:1px 1px 2px #000;">BOSS APPROACHING!</div>
+    </div>
+
     <div id="hit-flash"></div>
-    <div id="shot-flash"></div>
 
     <div id="result-modal">
       <div class="wooden-panel result-board">
@@ -196,10 +215,14 @@
   <script>
     let score = 0;
     let isRedDetected = false;
-    let isCoolingDown = false;
     let isGameStarted = false;
+    
+    // 状態管理フラグ
+    let canScore = true;       // 一度得点が入ったら離すまで false にするフラグ
+    let isBossPhase = false;   // ボス戦中か否か
+    let bossHp = 10;           // ボスの耐久値 (10ヒットで撃破)
+    const MAX_BOSS_HP = 10;
 
-    const gameContainer = document.getElementById('game-container');
     const videoEl = document.getElementById('camera-feed');
     const canvasEl = document.getElementById('proc-canvas');
     const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
@@ -208,24 +231,19 @@
     const lockonIndicator = document.getElementById('lockon-indicator');
     const crosshair = document.getElementById('crosshair');
     const hitFlash = document.getElementById('hit-flash');
-    const shotFlash = document.getElementById('shot-flash');
     const startOverlay = document.getElementById('start-overlay');
     const startBtn = document.getElementById('start-btn');
+    const warningOverlay = document.getElementById('warning-overlay');
+    const bossHpContainer = document.getElementById('boss-hp-container');
+    const bossHpFill = document.getElementById('boss-hp-fill');
 
     let audioCtx;
 
-    // 全画面表示（フルスクリーン）に切り替える関数
     function requestFullScreen() {
       const docEl = document.documentElement;
-      if (docEl.requestFullscreen) {
-        docEl.requestFullscreen().catch(() => {});
-      } else if (docEl.webkitRequestFullscreen) { /* Safari (iOS/Mac) */
-        docEl.webkitRequestFullscreen().catch(() => {});
-      } else if (docEl.msRequestFullscreen) {
-        docEl.msRequestFullscreen().catch(() => {});
-      }
-      
-      // アドレスバー非表示のための自動スクロール処理
+      if (docEl.requestFullscreen) { docEl.requestFullscreen().catch(() => {}); }
+      else if (docEl.webkitRequestFullscreen) { docEl.webkitRequestFullscreen().catch(() => {}); }
+      else if (docEl.msRequestFullscreen) { docEl.msRequestFullscreen().catch(() => {}); }
       window.scrollTo(0, 1);
     }
 
@@ -263,8 +281,24 @@
       } catch (e) {}
     }
 
+    function playWarningSE() {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } catch(e) {}
+    }
+
     startBtn.addEventListener('click', async () => {
-      // 1. フルスクリーン化を要求
       requestFullScreen();
 
       try {
@@ -272,7 +306,6 @@
         if (audioCtx.state === 'suspended') await audioCtx.resume();
       } catch (e) {}
 
-      // 2. カメラ起動処理
       const constraintsList = [
         { video: { facingMode: { exact: "environment" } }, audio: false },
         { video: { facingMode: "environment" }, audio: false },
@@ -280,39 +313,28 @@
       ];
 
       let stream = null;
-      let lastErr = null;
-
       for (const constraints of constraintsList) {
         try {
           stream = await navigator.mediaDevices.getUserMedia(constraints);
           if (stream) break;
-        } catch (err) {
-          lastErr = err;
-        }
+        } catch (err) {}
       }
 
       if (!stream) {
-        alert("カメラの起動に失敗しました。\n・カメラの使用を許可してください\n・他のアプリを終了させてください");
+        alert("カメラの起動に失敗しました。権限を確認してください。");
         return;
       }
 
       videoEl.srcObject = stream;
-
-      try {
-        await videoEl.play();
-      } catch (e) {
-        console.log("Play interrupted", e);
-      }
+      try { await videoEl.play(); } catch (e) {}
 
       startOverlay.style.display = 'none';
       isGameStarted = true;
 
       requestAnimationFrame(processFrame);
 
-      setTimeout(() => {
-        document.getElementById('result-modal').style.display = 'flex';
-        document.getElementById('final-score').textContent = score;
-      }, 40000);
+      // コースター進行に合わせてボス戦へ自動移行 (例: 25秒後)
+      setTimeout(triggerBossBattle, 25000);
     });
 
     function rgbToHsv(r, g, b) {
@@ -363,13 +385,22 @@
           }
         }
 
-        if (redPixelCount / totalPixels > 0.05) {
+        const isDetectedNow = (redPixelCount / totalPixels) > 0.05;
+
+        if (isDetectedNow) {
           if (!isRedDetected) {
             isRedDetected = true;
             lockonIndicator.textContent = "🎯 ターゲット捕捉！";
             lockonIndicator.classList.add('locked');
             crosshair.classList.add('detected');
           }
+
+          // --- 自動撃破＆スコア判定（1回離さないと再加算されない仕組み） ---
+          if (canScore) {
+            canScore = false; // 連続加算ロック
+            onTargetHit();
+          }
+
         } else {
           if (isRedDetected) {
             isRedDetected = false;
@@ -377,33 +408,62 @@
             lockonIndicator.classList.remove('locked');
             crosshair.classList.remove('detected');
           }
+          // 一度画角から外れたら再び得点可能にする
+          canScore = true;
         }
       }
 
       requestAnimationFrame(processFrame);
     }
 
-    window.addEventListener('pointerdown', (e) => {
-      if (!isGameStarted || e.target === startBtn || e.target.classList.contains('btn-gold')) return;
-
+    // ターゲット検知時の自動ヒット処理
+    function onTargetHit() {
       playShotSE();
-      shotFlash.style.opacity = '1';
-      setTimeout(() => { shotFlash.style.opacity = '0'; }, 50);
+      playHitSE();
 
-      if (isRedDetected && !isCoolingDown) {
+      hitFlash.style.opacity = '1';
+      setTimeout(() => { hitFlash.style.opacity = '0'; }, 120);
+
+      if (!isBossPhase) {
+        // 通常時スコア加算
         score += 100;
         scoreVal.textContent = score;
-        playHitSE();
+      } else {
+        // ボス戦時
+        score += 200;
+        scoreVal.textContent = score;
+        bossHp--;
+        const hpPercent = Math.max(0, (bossHp / MAX_BOSS_HP) * 100);
+        bossHpFill.style.width = hpPercent + '%';
 
-        hitFlash.style.opacity = '1';
-        setTimeout(() => { hitFlash.style.opacity = '0'; }, 120);
-
-        isCoolingDown = true;
-        setTimeout(() => { isCoolingDown = false; }, 800);
+        if (bossHp <= 0) {
+          endGame();
+        }
       }
-    });
+    }
+
+    // ボス戦突入処理（画面の警告・サイレン効果）
+    function triggerBossBattle() {
+      if (!isGameStarted) return;
+
+      warningOverlay.style.display = 'flex';
+      playWarningSE();
+      const warnInterval = setInterval(playWarningSE, 600);
+
+      setTimeout(() => {
+        clearInterval(warnInterval);
+        warningOverlay.style.display = 'none';
+        isBossPhase = true;
+        bossHpContainer.style.display = 'flex';
+        lockonIndicator.textContent = "⚠️ ボスを撃破せよ！";
+      }, 3000);
+    }
+
+    function endGame() {
+      isGameStarted = false;
+      document.getElementById('result-modal').style.display = 'flex';
+      document.getElementById('final-score').textContent = score;
+    }
   </script>
 </body>
 </html>
-
-

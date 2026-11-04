@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ジャングル探検隊 - 松野先生救出シューティング</title>
+  <title>秘島探検隊 - トロッコショックシューティング</title>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800;900&display=swap');
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    
+
     html, body {
       width: 100%; height: 100%;
       height: 100vh; height: -webkit-fill-available;
@@ -50,36 +50,37 @@
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
 
-    /* スタート画面 */
-    #start-overlay {
+    /* ストーリー・説明画面 */
+    #story-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999;
-      background: radial-gradient(circle, rgba(16, 42, 20, 0.88) 0%, rgba(5, 18, 8, 0.96) 100%);
+      background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
       display: flex; flex-direction: column; justify-content: center; align-items: center;
       padding: 15px;
     }
 
-    .start-board {
-      width: 85%; max-width: 520px; padding: 18px 25px; text-align: center;
+    .story-board {
+      width: 90%; max-width: 520px; padding: 20px; text-align: center;
+      max-height: 90vh; overflow-y: auto;
     }
-    .start-board h1 {
-      font-size: clamp(18px, 4vw, 26px); font-weight: 900; color: #ffe600;
-      text-shadow: 2px 2px 0 #5c2c00, -2px -2px 0 #5c2c00, 2px -2px 0 #5c2c00, -2px 2px 0 #5c2c00;
-      letter-spacing: 1px; margin-bottom: 4px;
+    .story-board h1 {
+      font-size: clamp(18px, 4.5vw, 24px); font-weight: 900; color: #ffe600;
+      text-shadow: 2px 2px 0 #5c2c00; margin-bottom: 8px;
     }
-    .start-board .subtitle {
-      font-size: clamp(12px, 2.5vw, 15px); color: #76ff03; font-weight: 900;
-      text-shadow: 1px 1px 2px #000; margin-bottom: 10px;
-    }
-    .start-board p {
-      font-size: clamp(11px, 2vw, 13px); color: #fff; line-height: 1.4; font-weight: 800;
-      background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 10px;
+    .story-text-box {
+      font-size: clamp(12px, 2.3vw, 14px); color: #fff; line-height: 1.5; font-weight: 800;
+      background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px;
       border: 1.5px solid #3d230d; text-shadow: 1px 1px 2px #000;
+      text-align: left; margin-bottom: 12px; max-height: 50vh; overflow-y: auto;
     }
+    .dialogue { margin-bottom: 8px; }
+    .dialogue .speaker-senpai { color: #ffca28; font-weight: 900; }
+    .dialogue .speaker-kouhai { color: #81c784; font-weight: 900; }
+    .dialogue .speaker-native { color: #ff7043; font-weight: 900; }
 
     .btn-gold {
       background: linear-gradient(180deg, #ffe600 0%, #ff9900 100%);
       color: #3d1e00; border: 2.5px solid #fff; padding: 10px 32px;
-      font-size: clamp(16px, 3.2vw, 20px); font-weight: 900; border-radius: 40px; margin-top: 12px;
+      font-size: clamp(16px, 3.2vw, 20px); font-weight: 900; border-radius: 40px;
       box-shadow: 0 4px 0 #a65100, 0 6px 12px rgba(0,0,0,0.5); cursor: pointer;
       text-shadow: 0 1px 0 rgba(255,255,255,0.6); transition: transform 0.1s;
     }
@@ -134,9 +135,8 @@
     @keyframes blink { from { opacity: 0.3; } to { opacity: 0.8; } }
 
     #warning-text {
-      font-size: clamp(32px, 8vw, 64px); font-weight: 900; color: #ff1744;
-      text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000;
-      letter-spacing: 4px;
+      font-size: clamp(28px, 7vw, 56px); font-weight: 900; color: #ff1744;
+      text-shadow: 3px 3px 0 #000, -3px -3px 0 #000; letter-spacing: 2px; text-align: center;
     }
 
     #boss-hp-container {
@@ -144,8 +144,8 @@
       width: 80%; max-width: 400px; display: none; flex-direction: column;
       align-items: center; z-index: 20;
     }
-    .boss-label { font-size: 16px; font-weight: 900; color: #ff3d00; text-shadow: 1px 1px 2px #000; margin-bottom: 4px; }
-    .hp-bar-bg { width: 100%; height: 20px; background: #333; border: 2px solid #fff; border-radius: 10px; overflow: hidden; }
+    .boss-label { font-size: 15px; font-weight: 900; color: #ff3d00; text-shadow: 1px 1px 2px #000; margin-bottom: 4px; }
+    .hp-bar-bg { width: 100%; height: 18px; background: #333; border: 2px solid #fff; border-radius: 10px; overflow: hidden; }
     .hp-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff1744, #ff9100); transition: width 0.2s ease; }
 
     #hit-flash {
@@ -159,7 +159,7 @@
       background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
       display: none; flex-direction: column; align-items: center; justify-content: center; padding: 15px;
     }
-    .result-board { width: 80%; max-width: 480px; padding: 20px; text-align: center; }
+    .result-board { width: 85%; max-width: 480px; padding: 20px; text-align: center; }
     .result-board h1 { font-size: clamp(20px, 4.5vw, 28px); font-weight: 900; color: #ffe600; text-shadow: 2px 2px 0 #5c2c00; margin-bottom: 4px; }
     .result-board p { color: #76ff03; font-size: clamp(12px, 2.5vw, 15px); font-weight: 900; }
     .score-box { font-size: clamp(36px, 8vw, 54px); font-weight: 900; color: #fff; margin: 10px 0; text-shadow: 3px 3px 0 #e65100, 0 0 15px #ff9100; }
@@ -171,41 +171,48 @@
     <video id="camera-feed" autoplay playsinline muted></video>
     <canvas id="proc-canvas" width="160" height="120"></canvas>
 
-    <div id="start-overlay">
-      <div class="wooden-panel start-board">
-        <h1>松野先生救出作戦</h1>
-        <div class="subtitle">🌴 ハンズフリー・自動エイムモード 🗿</div>
-        <p>カメラを赤い標的に向けるだけで自動発射！コースターの上から標的を撃ち抜け！</p>
-        <button id="start-btn" class="btn-gold">ミッション開始</button>
+    <!-- プロローグ・ストーリー画面 -->
+    <div id="story-overlay">
+      <div class="wooden-panel story-board">
+        <h1>トレジャーハンター脱出劇</h1>
+        <div class="story-text-box">
+          <div class="dialogue"><span class="speaker-kouhai">後輩:</span> 「先輩！本当に宝なんてあるんすか？絶賛迷子中ですよ！」[cite: 1]</div>
+          <div class="dialogue"><span class="speaker-senpai">先輩:</span> 「文句言うな！あそこに赤い宝石があるらしいんだよ！」[cite: 1]</div>
+          <div class="dialogue"><span class="speaker-native">先住民:</span> 「侵入者だー！！仲間を集めろー！！」[cite: 1]</div>
+          <div class="dialogue"><span class="speaker-senpai">先輩:</span> 「ヤバい追いつかれる！トロッコに乗れ！このショックガンで追っ手の『赤い標的』を撃ち落とせ！！」[cite: 1]</div>
+        </div>
+        <button id="start-btn" class="btn-gold">トロッコ発進！</button>
       </div>
     </div>
 
+    <!-- HUD -->
     <div id="ui-layer">
       <div class="hud-header wooden-panel">
         <div class="score-badge">🏆 SCORE: <span id="score-val">0</span></div>
-        <div id="lockon-indicator">🔍 ターゲット捜索中...</div>
+        <div id="lockon-indicator">🔍 敵捜索中...</div>
       </div>
       <div class="crosshair" id="crosshair"></div>
     </div>
 
     <!-- ボスHPUI -->
     <div id="boss-hp-container">
-      <div class="boss-label">🤖 BOSS: 暴走マッドロボ</div>
+      <div class="boss-label">🗿 BOSS: 先住民の巨大ガーディアン</div>
       <div class="hp-bar-bg"><div id="boss-hp-fill" class="hp-bar-fill"></div></div>
     </div>
 
-    <!-- 警告表示 -->
+    <!-- 追っ手・ボス急襲警告 -->
     <div id="warning-overlay">
-      <div id="warning-text">⚠️ WARNING ⚠️</div>
-      <div style="color:#fff; font-weight:900; font-size:20px; text-shadow:1px 1px 2px #000;">BOSS APPROACHING!</div>
+      <div id="warning-text">⚠️ 巨大ガーディアン出現！ ⚠️</div>
+      <div style="color:#fff; font-weight:900; font-size:16px; text-shadow:1px 1px 2px #000; margin-top:8px;">赤く輝く弱点を連続で撃ち抜け！</div>
     </div>
 
     <div id="hit-flash"></div>
 
+    <!-- リザルト画面 -->
     <div id="result-modal">
       <div class="wooden-panel result-board">
-        <h1>MISSION COMPLETE!</h1>
-        <p>松野先生の救出に成功しました！</p>
+        <h1>島からの脱出成功！</h1>
+        <p>追っ手を退け、お宝を持ち帰ることができた！</p>
         <div class="score-box"><span id="final-score">0</span><span style="font-size:20px;"> PT</span></div>
         <button class="btn-gold" onclick="location.reload()">もう一度挑戦</button>
       </div>
@@ -216,11 +223,11 @@
     let score = 0;
     let isRedDetected = false;
     let isGameStarted = false;
-    
-    // 状態管理フラグ
-    let canScore = true;       // 一度得点が入ったら離すまで false にするフラグ
-    let isBossPhase = false;   // ボス戦中か否か
-    let bossHp = 10;           // ボスの耐久値 (10ヒットで撃破)
+
+    // ワンショット・ワンキル制御＆ボス制御フラグ
+    let canScore = true;
+    let isBossPhase = false;
+    let bossHp = 10;
     const MAX_BOSS_HP = 10;
 
     const videoEl = document.getElementById('camera-feed');
@@ -231,7 +238,7 @@
     const lockonIndicator = document.getElementById('lockon-indicator');
     const crosshair = document.getElementById('crosshair');
     const hitFlash = document.getElementById('hit-flash');
-    const startOverlay = document.getElementById('start-overlay');
+    const storyOverlay = document.getElementById('story-overlay');
     const startBtn = document.getElementById('start-btn');
     const warningOverlay = document.getElementById('warning-overlay');
     const bossHpContainer = document.getElementById('boss-hp-container');
@@ -321,20 +328,20 @@
       }
 
       if (!stream) {
-        alert("カメラの起動に失敗しました。権限を確認してください。");
+        alert("カメラの起動に失敗しました。カメラ使用を許可してください。");
         return;
       }
 
       videoEl.srcObject = stream;
       try { await videoEl.play(); } catch (e) {}
 
-      startOverlay.style.display = 'none';
+      storyOverlay.style.display = 'none';
       isGameStarted = true;
 
       requestAnimationFrame(processFrame);
 
-      // コースター進行に合わせてボス戦へ自動移行 (例: 25秒後)
-      setTimeout(triggerBossBattle, 25000);
+      // コースター走行後半（約22秒後）にボス（巨大ガーディアン）戦へ移行
+      setTimeout(triggerBossBattle, 22000);
     });
 
     function rgbToHsv(r, g, b) {
@@ -395,20 +402,20 @@
             crosshair.classList.add('detected');
           }
 
-          // --- 自動撃破＆スコア判定（1回離さないと再加算されない仕組み） ---
+          // 手動タップ不要：画面内に赤い標的が入ったら自動的に撃破＆得点（1回認識を外さないと再加算されない）
           if (canScore) {
-            canScore = false; // 連続加算ロック
+            canScore = false;
             onTargetHit();
           }
 
         } else {
           if (isRedDetected) {
             isRedDetected = false;
-            lockonIndicator.textContent = "🔍 ターゲット捜索中...";
+            lockonIndicator.textContent = "🔍 敵捜索中...";
             lockonIndicator.classList.remove('locked');
             crosshair.classList.remove('detected');
           }
-          // 一度画角から外れたら再び得点可能にする
+          // カメラから赤い標的が外れたら再び判定可能状態にする
           canScore = true;
         }
       }
@@ -416,7 +423,6 @@
       requestAnimationFrame(processFrame);
     }
 
-    // ターゲット検知時の自動ヒット処理
     function onTargetHit() {
       playShotSE();
       playHitSE();
@@ -425,11 +431,9 @@
       setTimeout(() => { hitFlash.style.opacity = '0'; }, 120);
 
       if (!isBossPhase) {
-        // 通常時スコア加算
         score += 100;
         scoreVal.textContent = score;
       } else {
-        // ボス戦時
         score += 200;
         scoreVal.textContent = score;
         bossHp--;
@@ -442,7 +446,6 @@
       }
     }
 
-    // ボス戦突入処理（画面の警告・サイレン効果）
     function triggerBossBattle() {
       if (!isGameStarted) return;
 
@@ -455,7 +458,7 @@
         warningOverlay.style.display = 'none';
         isBossPhase = true;
         bossHpContainer.style.display = 'flex';
-        lockonIndicator.textContent = "⚠️ ボスを撃破せよ！";
+        lockonIndicator.textContent = "⚠️ 巨大ガーディアン撃破命令！";
       }, 3000);
     }
 

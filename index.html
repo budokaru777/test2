@@ -580,12 +580,12 @@
         // ピンク未検出時
         hintTitle.textContent = "🔍 探検隊のヒント";
         hintTitle.style.color = "#ff69b4";
-        hintBody.innerHTML = "コースター沿道には高得点の<span style='color:#ff69b4; font-weight:900;'>【ピンクのレア的】</span>が隠されています！<br><br>次は<span style='color:#ffe600; font-weight:900;'>『木の上』</span>や<span style='color:#ffe600; font-weight:900;'>『天井付近』</span>に注目してみよう！";
+        hintBody.innerHTML = "高得点の<span style='color:#ff69b4; font-weight:900;'>【ピンクの的】</span>が隠されています！<br><br>次は<span style='color:#ffe600; font-weight:900;'>『木の上』</span>や<span style='color:#ffe600; font-weight:900;'>『天井付近』</span>に注目してみよう！";
       } else {
         // ピンク検出済み
         hintTitle.textContent = "🏆 素晴らしい腕前！";
         hintTitle.style.color = "#ffe600";
-        hintBody.innerHTML = `見事にピンクのレア的を<span style='color:#ff69b4; font-weight:900;'> ${pinkHitCount} 回 </span>発見しました！<br>ジャングルの伝説のトレジャーハンター認定です！`;
+        hintBody.innerHTML = `見事にピンクの的を<span style='color:#ff69b4; font-weight:900;'> ${pinkHitCount} 回 </span>発見しました！<br>伝説のトレジャーハンター認定です！`;
       }
     });
 

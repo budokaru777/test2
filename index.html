@@ -34,15 +34,14 @@
 
     #proc-canvas { display: none; }
 
-    /* 初期画面（スマホ縦画面にピッタリ収まるように調整） */
+    /* 初期画面 */
     #start-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999;
-      /* 横長画像を縦画面全体にきれいにフィットさせる設定 */
-      background-color: #1a0f07; /* 画像上下の余白になじむ背景色 */
+      background-color: #1a0f07;
       background-image: url('title_bg.jpg');
       background-position: center center;
       background-repeat: no-repeat;
-      background-size: contain; /* 画面内に画像全体をきれいに収める */
+      background-size: contain;
       
       display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
       padding-bottom: 10vh;
@@ -128,7 +127,7 @@
       background: rgba(255, 230, 0, 0.4); opacity: 0; transition: opacity 0.08s ease; pointer-events: none;
     }
 
-    /* リザルト＆ランキング画面 */
+    /* リザルト画面 */
     #result-modal {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
       background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
@@ -145,7 +144,7 @@
     .ranking-item { display: flex; justify-content: space-between; font-weight: 800; color: #fff; padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .ranking-item.my-score { color: #ffe600; background: rgba(255, 230, 0, 0.2); border-radius: 4px; }
 
-    /* 動画再生画面 */
+    /* 動画画面 */
     #video-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 200;
       background: #000; display: none; justify-content: center; align-items: center;
@@ -159,7 +158,7 @@
     <video id="camera-feed" autoplay playsinline muted></video>
     <canvas id="proc-canvas" width="320" height="240"></canvas>
 
-    <!-- スタート画面（スマホ縦画面に収まるよう表示） -->
+    <!-- スタート画面 -->
     <div id="start-overlay">
       <button id="start-btn" class="btn-gold">スタート</button>
     </div>
@@ -211,6 +210,7 @@
     let score = 0;
     let isGameStarted = false;
     let canScore = true;
+    let isCoolingDown = false; // 0.85秒クールダウンフラグ
     let isBossPhase = false;
     let bossHp = 3;
     const MAX_BOSS_HP = 3;
@@ -287,7 +287,9 @@
       isGameStarted = true;
 
       requestAnimationFrame(processFrame);
-      setTimeout(triggerBossBattle, 20000);
+      
+      // ゲーム開始から16秒後（16000ms）にボス戦へ移行
+      setTimeout(triggerBossBattle, 16000);
     });
 
     function rgbToHsv(r, g, b) {
@@ -339,13 +341,13 @@
           lockonIndicator.className = 'bonus';
           crosshair.className = 'crosshair detected-pink';
 
-          if (canScore) { canScore = false; onTargetHit(300, true); }
+          if (canScore && !isCoolingDown) { triggerHit(300, true); }
         } else if (isRedDetected) {
           lockonIndicator.textContent = "🎯 ターゲット捕捉！";
           lockonIndicator.className = 'locked';
           crosshair.className = 'crosshair detected-red';
 
-          if (canScore) { canScore = false; onTargetHit(100, false); }
+          if (canScore && !isCoolingDown) { triggerHit(100, false); }
         } else {
           lockonIndicator.textContent = "🔍 ターゲット捜索中...";
           lockonIndicator.className = '';
@@ -355,6 +357,19 @@
       }
 
       requestAnimationFrame(processFrame);
+    }
+
+    // クールタイム（0.85秒）を伴うヒット処理
+    function triggerHit(points, isBonus) {
+      canScore = false;
+      isCoolingDown = true;
+
+      onTargetHit(points, isBonus);
+
+      // 850ミリ秒（0.85秒）経つまで次の読み取りを行わない
+      setTimeout(() => {
+        isCoolingDown = false;
+      }, 850);
     }
 
     function onTargetHit(points, isBonus) {

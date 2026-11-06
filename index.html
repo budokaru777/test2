@@ -71,7 +71,7 @@
 
     .hud-header {
       display: flex; justify-content: space-between; align-items: center; padding: 6px 18px;
-      pointer-events: auto; /* 管理者リセットのタップを受け付ける */
+      pointer-events: auto;
     }
     .score-badge {
       font-size: clamp(16px, 3vw, 22px); font-weight: 900; color: #ffe600;
@@ -104,7 +104,7 @@
       transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 45px #ff69b4 !important;
     }
 
-    /* 💖 豪華ピンクエフェクト用ポップアップ */
+    /* 💖 ピンクエフェクト用ポップアップ */
     #pink-effect-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 40;
       pointer-events: none; display: flex; flex-direction: column;
@@ -174,23 +174,56 @@
     }
     #ending-video { width: 100vw; height: 100vh; object-fit: contain; }
 
-    /* ③ ヒント＆謝辞画面 */
+    /* ③ ド派手金ピカ（ゴージャス）ヒント＆謝辞画面 */
     #hint-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 300;
-      background: radial-gradient(circle, rgba(20, 20, 35, 0.96) 0%, rgba(5, 5, 15, 0.98) 100%);
-      display: none; flex-direction: column; align-items: center; justify-content: center; padding: 25px;
-      text-align: center; color: #fff;
+      background: radial-gradient(circle, rgba(30, 20, 0, 0.98) 0%, rgba(10, 5, 0, 0.99) 100%);
+      display: none; flex-direction: column; align-items: center; justify-content: center; padding: 15px;
+      text-align: center; color: #fff; overflow: hidden;
     }
-    .hint-card {
-      width: 90%; max-width: 480px; padding: 25px 20px;
+
+    /* 金ピカパーティクル背景キャンバス */
+    #sparkle-canvas {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none; z-index: 1;
     }
-    .hint-title { font-size: clamp(22px, 5vw, 28px); color: #ff69b4; font-weight: 900; text-shadow: 0 0 10px #ff1493; margin-bottom: 15px; }
+
+    .gorgeous-card {
+      position: relative; z-index: 2;
+      width: 92%; max-width: 440px; padding: 25px 20px;
+      background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+      border: 4px solid #fff; border-radius: 24px;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.9), 0 12px 24px rgba(0,0,0,0.8);
+      animation: goldGlow 2s infinite alternate;
+    }
+
+    @keyframes goldGlow {
+      0% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.7), inset 0 0 15px #fff; }
+      100% { box-shadow: 0 0 45px rgba(255, 230, 0, 1), inset 0 0 25px #fff; }
+    }
+
+    .gorgeous-inner {
+      background: rgba(15, 10, 5, 0.92); border-radius: 18px; padding: 20px 15px;
+      border: 2px solid #ffe600;
+    }
+
+    .hint-title {
+      font-size: clamp(22px, 5.5vw, 30px); font-weight: 900; color: #ffe600;
+      text-shadow: 0 0 12px #ff9100, 2px 2px 0 #5c2c00; margin-bottom: 14px;
+      letter-spacing: 1px;
+    }
+
     .hint-body {
-      font-size: clamp(14px, 3.2vw, 18px); font-weight: 800; line-height: 1.6;
-      background: rgba(255,255,255,0.08); padding: 18px; border-radius: 16px;
-      border: 2px solid #ff69b4; margin-bottom: 25px; text-shadow: 1px 1px 2px #000;
+      font-size: clamp(13px, 3.2vw, 16px); font-weight: 800; line-height: 1.6; color: #fff;
+      background: rgba(255,255,255,0.05); padding: 14px 10px; border-radius: 14px;
+      border: 1.5px solid rgba(255, 230, 0, 0.5); margin-bottom: 18px;
+      text-shadow: 1px 1px 2px #000; word-break: break-all;
     }
-    .thanks-text { font-size: clamp(16px, 3.8vw, 22px); font-weight: 900; color: #ffe600; text-shadow: 2px 2px 0 #000; }
+
+    .thanks-text {
+      font-size: clamp(18px, 4.5vw, 24px); font-weight: 900; color: #fff;
+      text-shadow: 0 0 10px #ffe600, 2px 2px 0 #8b5a2b; letter-spacing: 1px;
+    }
   </style>
 </head>
 <body>
@@ -232,7 +265,7 @@
 
     <div id="hit-flash"></div>
 
-    <!-- ① リザルト画面 (自動移行用) -->
+    <!-- ① リザルト画面 -->
     <div id="result-modal">
       <div class="wooden-panel result-board">
         <h1>MISSION COMPLETE!</h1>
@@ -250,12 +283,15 @@
       </video>
     </div>
 
-    <!-- ③ ヒント＆謝辞画面 -->
+    <!-- ③ ド派手金ピカ（ゴージャス）ヒント＆謝辞画面 -->
     <div id="hint-overlay">
-      <div class="wooden-panel hint-card">
-        <div class="hint-title" id="hint-title">💡 探検のアドバイス</div>
-        <div class="hint-body" id="hint-body"></div>
-        <div class="thanks-text">ありがとうございました！</div>
+      <canvas id="sparkle-canvas"></canvas>
+      <div class="gorgeous-card">
+        <div class="gorgeous-inner">
+          <div class="hint-title" id="hint-title">✨ TREASURE RESULT ✨</div>
+          <div class="hint-body" id="hint-body"></div>
+          <div class="thanks-text">ありがとうございました！</div>
+        </div>
       </div>
     </div>
   </div>
@@ -269,7 +305,7 @@
     let bossHp = 4;
     const MAX_BOSS_HP = 4;
 
-    // ピンク読取フラグ
+    // ピンク読取個数
     let pinkHitCount = 0;
 
     // 管理者タップ用カウント
@@ -307,7 +343,6 @@
       window.scrollTo(0, 1);
     }
 
-    // 通常ヒットSE
     function playHitSE() {
       if (!audioCtx) return;
       try {
@@ -323,11 +358,10 @@
       } catch (e) {}
     }
 
-    // 💖 豪華ファンファーレSE（ピンク検知時）
     function playPinkBonusSE() {
       if (!audioCtx) return;
       try {
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, idx) => {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
@@ -342,7 +376,6 @@
       } catch (e) {}
     }
 
-    // ⚠️ 警報サウンド（ボス登場時）
     function playWarningSound() {
       if (!audioCtx) return;
       try {
@@ -429,7 +462,6 @@
           if ((h >= 335 || h <= 25) && s > 0.30 && v > 0.20) {
             redPixels++;
           }
-          // 💖 厳格なピンク判定
           else if (h >= 300 && h <= 330 && s > 0.45 && v > 0.45) {
             pinkPixels++;
           }
@@ -476,7 +508,6 @@
 
     function onTargetHit(points, isBonus) {
       if (isBonus) {
-        // 💖 豪華演出＆音
         playPinkBonusSE();
         pinkEffectOverlay.classList.add('active');
         hitFlash.style.background = 'rgba(255, 20, 147, 0.7)';
@@ -509,13 +540,11 @@
       }
     }
 
-    // ボス戦突入（音＋バイブ振動）
     function triggerBossBattle() {
       if (!isGameStarted) return;
       
       warningOverlay.style.display = 'flex';
 
-      // 📳 スマホのバイブ振動 (パルスパターン: 400ms振動, 100ms休み, 400ms振動)
       if ("vibrate" in navigator) {
         navigator.vibrate([400, 100, 400, 100, 600]);
       }
@@ -532,7 +561,6 @@
       }, 2500);
     }
 
-    // ① リザルト表示 ➔ ② 自動動画再生 ➔ ③ 自動ヒント・謝辞画面表示
     function endGame() {
       isGameStarted = false;
       resultModal.style.display = 'flex';
@@ -562,40 +590,86 @@
 
       localStorage.setItem(storageKey, JSON.stringify(ranking));
 
-      // 3秒間ランキングを見せたあと、自動で動画画面へ切り替え
       setTimeout(() => {
         resultModal.style.display = 'none';
         videoOverlay.style.display = 'flex';
-        endingVideo.muted = false; // 音声付きで再生
+        endingVideo.muted = false;
         endingVideo.play().catch(() => {});
       }, 3500);
     }
 
-    // 動画終了時にヒント画面へ切り替え
+    // 動画終了時 ➔ 金ピカゴージャス画面表示＆キラキラパーティカル開始
     endingVideo.addEventListener('ended', () => {
       videoOverlay.style.display = 'none';
       hintOverlay.style.display = 'flex';
 
+      startSparkleAnimation(); // キラキラ金ピカアニメーション起動
+
       if (pinkHitCount === 0) {
-        // ピンク未検出時
+        // ピンク未検出時（単位：個）
         hintTitle.textContent = "🔍 探検隊のヒント";
-        hintTitle.style.color = "#ff69b4";
-        hintBody.innerHTML = "高得点の<span style='color:#ff69b4; font-weight:900;'>【ピンクの的】</span>が隠されています！<br><br>次は<span style='color:#ffe600; font-weight:900;'>『木の上』</span>や<span style='color:#ffe600; font-weight:900;'>『天井付近』</span>に注目してみよう！";
-      } else {
-        // ピンク検出済み
-        hintTitle.textContent = "🏆 素晴らしい腕前！";
         hintTitle.style.color = "#ffe600";
-        hintBody.innerHTML = `見事にピンクの的を<span style='color:#ff69b4; font-weight:900;'> ${pinkHitCount} 回 </span>発見しました！<br>伝説のトレジャーハンター認定です！`;
+        hintBody.innerHTML = "コースター沿道には高得点の<br><span style='color:#ff69b4; font-size:18px; font-weight:900;'>【ピンクのレア的】</span>が隠されています！<br><br>次は<span style='color:#ffe600; font-weight:900;'>『木の上』</span>や<span style='color:#ffe600; font-weight:900;'>『天井付近』</span>に注目してみよう！";
+      } else {
+        // ピンク検出済み（単位：個）
+        hintTitle.textContent = "👑 伝説のハンター 👑";
+        hintTitle.style.color = "#ffe600";
+        hintBody.innerHTML = `見事にピンクのレア的を<br><span style='color:#ff69b4; font-size:22px; font-weight:900;'> ${pinkHitCount} 個 </span>発見しました！<br><br>ジャングルの伝説のトレジャーハンター認定です！`;
       }
     });
 
-    // 🔒 管理者用：スコア領域を5回連打で本日のランキングリセット
+    // 🌟 金ピカキラキラパーティクルを描画する処理
+    function startSparkleAnimation() {
+      const spCanvas = document.getElementById('sparkle-canvas');
+      const spCtx = spCanvas.getContext('2d');
+      spCanvas.width = window.innerWidth;
+      spCanvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#ffe600', '#ffca28', '#fff', '#ff9100', '#ffd54f'];
+
+      for (let i = 0; i < 40; i++) {
+        particles.push({
+          x: Math.random() * spCanvas.width,
+          y: Math.random() * spCanvas.height,
+          size: Math.random() * 4 + 2,
+          speedY: -(Math.random() * 1.5 + 0.5),
+          speedX: Math.random() * 1 - 0.5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: Math.random()
+        });
+      }
+
+      function drawSparkles() {
+        spCtx.clearRect(0, 0, spCanvas.width, spCanvas.height);
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.alpha += (Math.random() - 0.5) * 0.05;
+
+          if (p.y < 0) p.y = spCanvas.height;
+          if (p.x < 0 || p.x > spCanvas.width) p.x = Math.random() * spCanvas.width;
+
+          spCtx.save();
+          spCtx.globalAlpha = Math.max(0.2, Math.min(1, p.alpha));
+          spCtx.fillStyle = p.color;
+          spCtx.beginPath();
+          spCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          spCtx.fill();
+          spCtx.restore();
+        });
+        requestAnimationFrame(drawSparkles);
+      }
+      drawSparkles();
+    }
+
+    // 管理者リセット
     scoreBadge.addEventListener('click', () => {
       adminTapCount++;
       if (adminTapCount >= 5) {
         adminTapCount = 0;
         const password = prompt("【管理者用メニュー】パスワードを入力してください:");
-        if (password === "admin123") { // 管理者用パスワード
+        if (password === "admin123") {
           const today = new Date().toISOString().split('T')[0];
           localStorage.removeItem(`ranking_${today}`);
           alert("本日のランキングデータをリセットしました。");

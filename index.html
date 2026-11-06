@@ -71,10 +71,11 @@
 
     .hud-header {
       display: flex; justify-content: space-between; align-items: center; padding: 6px 18px;
+      pointer-events: auto; /* 管理者リセットのタップを受け付ける */
     }
     .score-badge {
       font-size: clamp(16px, 3vw, 22px); font-weight: 900; color: #ffe600;
-      text-shadow: 2px 2px 0 #000;
+      text-shadow: 2px 2px 0 #000; cursor: pointer;
     }
 
     #lockon-indicator {
@@ -99,8 +100,30 @@
       transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 0 30px #ff1744 !important;
     }
     .crosshair.detected-pink {
-      border: 5px solid #ff69b4 !important; background: rgba(255, 105, 180, 0.3);
-      transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 35px #ff69b4 !important;
+      border: 5px solid #ff69b4 !important; background: rgba(255, 105, 180, 0.4);
+      transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 45px #ff69b4 !important;
+    }
+
+    /* 💖 豪華ピンクエフェクト用ポップアップ */
+    #pink-effect-overlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 40;
+      pointer-events: none; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; opacity: 0; transition: opacity 0.15s ease;
+    }
+    #pink-effect-overlay.active {
+      opacity: 1; animation: popScale 0.4s ease-out;
+    }
+    @keyframes popScale {
+      0% { transform: scale(0.6); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1.0); }
+    }
+    .pink-bonus-banner {
+      font-size: clamp(28px, 7vw, 54px); font-weight: 900; color: #fff;
+      text-shadow: 0 0 20px #ff1493, 3px 3px 0 #c71585, -3px -3px 0 #ff69b4;
+      background: linear-gradient(90deg, rgba(255,20,147,0.8), rgba(255,105,180,0.9), rgba(255,20,147,0.8));
+      padding: 12px 30px; border-radius: 50px; border: 4px solid #fff;
+      box-shadow: 0 0 30px #ff69b4, inset 0 0 15px #fff;
     }
 
     /* ボス戦UI */
@@ -115,19 +138,19 @@
 
     #warning-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 50;
-      background: rgba(255, 0, 0, 0.3); display: none; flex-direction: column;
+      background: rgba(255, 0, 0, 0.4); display: none; flex-direction: column;
       justify-content: center; align-items: center; pointer-events: none;
-      animation: blink 0.5s infinite alternate;
+      animation: blink 0.3s infinite alternate;
     }
-    @keyframes blink { from { opacity: 0.3; } to { opacity: 0.8; } }
-    #warning-text { font-size: clamp(28px, 7vw, 56px); font-weight: 900; color: #ff1744; text-shadow: 3px 3px 0 #000; }
+    @keyframes blink { from { opacity: 0.3; } to { opacity: 0.9; } }
+    #warning-text { font-size: clamp(32px, 8vw, 60px); font-weight: 900; color: #ff1744; text-shadow: 3px 3px 0 #000, -3px -3px 0 #000; }
 
     #hit-flash {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 5;
       background: rgba(255, 230, 0, 0.4); opacity: 0; transition: opacity 0.08s ease; pointer-events: none;
     }
 
-    /* リザルト画面 */
+    /* ① リザルト画面 */
     #result-modal {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
       background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
@@ -144,12 +167,30 @@
     .ranking-item { display: flex; justify-content: space-between; font-weight: 800; color: #fff; padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .ranking-item.my-score { color: #ffe600; background: rgba(255, 230, 0, 0.2); border-radius: 4px; }
 
-    /* 動画画面 */
+    /* ② 動画画面 */
     #video-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 200;
       background: #000; display: none; justify-content: center; align-items: center;
     }
     #ending-video { width: 100vw; height: 100vh; object-fit: contain; }
+
+    /* ③ ヒント＆謝辞画面 */
+    #hint-overlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 300;
+      background: radial-gradient(circle, rgba(20, 20, 35, 0.96) 0%, rgba(5, 5, 15, 0.98) 100%);
+      display: none; flex-direction: column; align-items: center; justify-content: center; padding: 25px;
+      text-align: center; color: #fff;
+    }
+    .hint-card {
+      width: 90%; max-width: 480px; padding: 25px 20px;
+    }
+    .hint-title { font-size: clamp(22px, 5vw, 28px); color: #ff69b4; font-weight: 900; text-shadow: 0 0 10px #ff1493; margin-bottom: 15px; }
+    .hint-body {
+      font-size: clamp(14px, 3.2vw, 18px); font-weight: 800; line-height: 1.6;
+      background: rgba(255,255,255,0.08); padding: 18px; border-radius: 16px;
+      border: 2px solid #ff69b4; margin-bottom: 25px; text-shadow: 1px 1px 2px #000;
+    }
+    .thanks-text { font-size: clamp(16px, 3.8vw, 22px); font-weight: 900; color: #ffe600; text-shadow: 2px 2px 0 #000; }
   </style>
 </head>
 <body>
@@ -166,10 +207,15 @@
     <!-- HUD -->
     <div id="ui-layer">
       <div class="hud-header wooden-panel">
-        <div class="score-badge">🏆 SCORE: <span id="score-val">0</span></div>
+        <div class="score-badge" id="score-badge">🏆 SCORE: <span id="score-val">0</span></div>
         <div id="lockon-indicator">🔍 ターゲット捜索中...</div>
       </div>
       <div class="crosshair" id="crosshair"></div>
+    </div>
+
+    <!-- 💖 豪華ピンクエフェクト演出 -->
+    <div id="pink-effect-overlay">
+      <div class="pink-bonus-banner">✨ 💖 BONUS +10000 💖 ✨</div>
     </div>
 
     <!-- ボスHPUI -->
@@ -178,31 +224,39 @@
       <div class="hp-bar-bg"><div id="boss-hp-fill" class="hp-bar-fill"></div></div>
     </div>
 
+    <!-- 警報オーバーレイ -->
     <div id="warning-overlay">
-      <div id="warning-text">⚠️ BOSS WARNING ⚠️</div>
+      <div id="warning-text">⚠️ WARNING ⚠️</div>
+      <div style="color:#fff; font-size:20px; font-weight:900; text-shadow:1px 1px 2px #000; margin-top:10px;">BOSS APPROACHING!</div>
     </div>
 
     <div id="hit-flash"></div>
 
-    <!-- リザルト画面 -->
+    <!-- ① リザルト画面 (自動移行用) -->
     <div id="result-modal">
       <div class="wooden-panel result-board">
         <h1>MISSION COMPLETE!</h1>
         <div class="score-box"><span id="final-score">0</span> PT</div>
         <div class="rank-info" id="rank-info">本日の順位: 計算中...</div>
-
         <div class="ranking-list" id="ranking-list"></div>
-
-        <button class="btn-gold" id="watch-video-btn" style="padding: 10px 24px; font-size: 18px;">スペシャル動画を見る 🎬</button>
-        <button class="btn-gold" onclick="location.reload()" style="padding: 8px 20px; font-size: 14px; margin-top: 8px; background: linear-gradient(180deg, #ccc 0%, #888 100%); color:#000;">もう一度プレイ</button>
+        <div style="color:#ffe600; font-size:14px; font-weight:800; margin-top:5px;">🎬 まもなくスペシャル動画が再生されます...</div>
       </div>
     </div>
 
-    <!-- 動画画面 -->
+    <!-- ② 動画画面 -->
     <div id="video-overlay">
-      <video id="ending-video" playsinline controls>
+      <video id="ending-video" playsinline muted autoplay style="width:100vw; height:100vh; object-fit:contain;">
         <source src="ending.mp4" type="video/mp4">
       </video>
+    </div>
+
+    <!-- ③ ヒント＆謝辞画面 -->
+    <div id="hint-overlay">
+      <div class="wooden-panel hint-card">
+        <div class="hint-title" id="hint-title">💡 探検のアドバイス</div>
+        <div class="hint-body" id="hint-body"></div>
+        <div class="thanks-text">ありがとうございました！</div>
+      </div>
     </div>
   </div>
 
@@ -212,16 +266,21 @@
     let canScore = true;
     let isCoolingDown = false;
     let isBossPhase = false;
-    
-    // ボスは4回で撃破
     let bossHp = 4;
     const MAX_BOSS_HP = 4;
+
+    // ピンク読取フラグ
+    let pinkHitCount = 0;
+
+    // 管理者タップ用カウント
+    let adminTapCount = 0;
 
     const videoEl = document.getElementById('camera-feed');
     const canvasEl = document.getElementById('proc-canvas');
     const ctx = canvasEl.getContext('2d', { willReadFrequently: true });
 
     const scoreVal = document.getElementById('score-val');
+    const scoreBadge = document.getElementById('score-badge');
     const lockonIndicator = document.getElementById('lockon-indicator');
     const crosshair = document.getElementById('crosshair');
     const hitFlash = document.getElementById('hit-flash');
@@ -230,9 +289,14 @@
     const warningOverlay = document.getElementById('warning-overlay');
     const bossHpContainer = document.getElementById('boss-hp-container');
     const bossHpFill = document.getElementById('boss-hp-fill');
+    const pinkEffectOverlay = document.getElementById('pink-effect-overlay');
+    
+    const resultModal = document.getElementById('result-modal');
     const videoOverlay = document.getElementById('video-overlay');
     const endingVideo = document.getElementById('ending-video');
-    const watchVideoBtn = document.getElementById('watch-video-btn');
+    const hintOverlay = document.getElementById('hint-overlay');
+    const hintTitle = document.getElementById('hint-title');
+    const hintBody = document.getElementById('hint-body');
 
     let audioCtx;
 
@@ -243,19 +307,55 @@
       window.scrollTo(0, 1);
     }
 
-    function playHitSE(isBonus = false) {
+    // 通常ヒットSE
+    function playHitSE() {
       if (!audioCtx) return;
       try {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = isBonus ? 'triangle' : 'square';
-        osc.frequency.setValueAtTime(isBonus ? 880 : 450, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(isBonus ? 1760 : 90, audioCtx.currentTime + 0.22);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.22);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.22);
       } catch (e) {}
+    }
+
+    // 💖 豪華ファンファーレSE（ピンク検知時）
+    function playPinkBonusSE() {
+      if (!audioCtx) return;
+      try {
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.06);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.06 + 0.2);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + idx * 0.06);
+          osc.stop(audioCtx.currentTime + idx * 0.06 + 0.2);
+        });
+      } catch (e) {}
+    }
+
+    // ⚠️ 警報サウンド（ボス登場時）
+    function playWarningSound() {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+      } catch(e) {}
     }
 
     startBtn.addEventListener('click', async () => {
@@ -326,18 +426,16 @@
           const r = data[i], g = data[i + 1], b = data[i + 2];
           const [h, s, v] = rgbToHsv(r, g, b);
 
-          // 赤色の判定 (Hue: 335~360度, 0~25度)
           if ((h >= 335 || h <= 25) && s > 0.30 && v > 0.20) {
             redPixels++;
           }
-          // 💖 ピンク色の判定を厳格化 (Hue: 300~330度、高彩度 s>0.45、高明度 v>0.45)
+          // 💖 厳格なピンク判定
           else if (h >= 300 && h <= 330 && s > 0.45 && v > 0.45) {
             pinkPixels++;
           }
         }
 
         const isRedDetected = (redPixels / totalPixels) > 0.008;
-        // ピンクの検出しきい値も厳しく設定 (0.015 = 1.5%以上のピクセル占有率が必要)
         const isPinkDetected = (pinkPixels / totalPixels) > 0.015;
 
         if (!isCoolingDown) {
@@ -346,14 +444,12 @@
             lockonIndicator.className = 'bonus';
             crosshair.className = 'crosshair detected-pink';
 
-            // ピンクの的：10,000点
             if (canScore) { triggerHit(10000, true); }
           } else if (isRedDetected) {
             lockonIndicator.textContent = "🎯 ターゲット捕捉！";
             lockonIndicator.className = 'locked';
             crosshair.className = 'crosshair detected-red';
 
-            // 赤い的：1,000点
             if (canScore) { triggerHit(1000, false); }
           } else {
             lockonIndicator.textContent = "🔍 ターゲット捜索中...";
@@ -371,54 +467,76 @@
       canScore = false;
       isCoolingDown = true;
 
+      if (isBonus) pinkHitCount++;
+
       onTargetHit(points, isBonus);
 
-      // 0.5秒間クールタイム
-      setTimeout(() => {
-        isCoolingDown = false;
-      }, 500);
+      setTimeout(() => { isCoolingDown = false; }, 500);
     }
 
     function onTargetHit(points, isBonus) {
-      playHitSE(isBonus);
+      if (isBonus) {
+        // 💖 豪華演出＆音
+        playPinkBonusSE();
+        pinkEffectOverlay.classList.add('active');
+        hitFlash.style.background = 'rgba(255, 20, 147, 0.7)';
+        hitFlash.style.opacity = '1';
 
-      hitFlash.style.background = isBonus ? 'rgba(255, 105, 180, 0.5)' : 'rgba(255, 230, 0, 0.4)';
-      hitFlash.style.opacity = '1';
-      setTimeout(() => { hitFlash.style.opacity = '0'; }, 120);
+        setTimeout(() => {
+          pinkEffectOverlay.classList.remove('active');
+          hitFlash.style.opacity = '0';
+        }, 600);
+      } else {
+        playHitSE();
+        hitFlash.style.background = 'rgba(255, 230, 0, 0.4)';
+        hitFlash.style.opacity = '1';
+        setTimeout(() => { hitFlash.style.opacity = '0'; }, 120);
+      }
 
       if (!isBossPhase) {
         score += points;
-        scoreVal.textContent = score;
+        scoreVal.textContent = score.toLocaleString();
       } else {
-        // ボス戦時は1回検知ごとに5,000点入る
         score += 5000;
-        scoreVal.textContent = score;
+        scoreVal.textContent = score.toLocaleString();
         bossHp--;
         const hpPercent = Math.max(0, (bossHp / MAX_BOSS_HP) * 100);
         bossHpFill.style.width = hpPercent + '%';
 
-        // 4回撃破で終了
         if (bossHp <= 0) {
           endGame();
         }
       }
     }
 
+    // ボス戦突入（音＋バイブ振動）
     function triggerBossBattle() {
       if (!isGameStarted) return;
+      
       warningOverlay.style.display = 'flex';
+
+      // 📳 スマホのバイブ振動 (パルスパターン: 400ms振動, 100ms休み, 400ms振動)
+      if ("vibrate" in navigator) {
+        navigator.vibrate([400, 100, 400, 100, 600]);
+      }
+
+      playWarningSound();
+      const warnInterval = setInterval(playWarningSound, 450);
+
       setTimeout(() => {
+        clearInterval(warnInterval);
         warningOverlay.style.display = 'none';
         isBossPhase = true;
         bossHpContainer.style.display = 'flex';
-        lockonIndicator.textContent = "⚠️ ボスを4回攻撃して撃破せよ！";
+        lockonIndicator.textContent = "⚠️ ボスを4回撃破せよ！";
       }, 2500);
     }
 
+    // ① リザルト表示 ➔ ② 自動動画再生 ➔ ③ 自動ヒント・謝辞画面表示
     function endGame() {
       isGameStarted = false;
-      document.getElementById('result-modal').style.display = 'flex';
-      document.getElementById('final-score').textContent = score;
+      resultModal.style.display = 'flex';
+      document.getElementById('final-score').textContent = score.toLocaleString();
 
       const today = new Date().toISOString().split('T')[0];
       const storageKey = `ranking_${today}`;
@@ -443,15 +561,49 @@
       });
 
       localStorage.setItem(storageKey, JSON.stringify(ranking));
+
+      // 3秒間ランキングを見せたあと、自動で動画画面へ切り替え
+      setTimeout(() => {
+        resultModal.style.display = 'none';
+        videoOverlay.style.display = 'flex';
+        endingVideo.muted = false; // 音声付きで再生
+        endingVideo.play().catch(() => {});
+      }, 3500);
     }
 
-    watchVideoBtn.addEventListener('click', () => {
-      videoOverlay.style.display = 'flex';
-      endingVideo.play();
-    });
-
+    // 動画終了時にヒント画面へ切り替え
     endingVideo.addEventListener('ended', () => {
       videoOverlay.style.display = 'none';
+      hintOverlay.style.display = 'flex';
+
+      if (pinkHitCount === 0) {
+        // ピンク未検出時
+        hintTitle.textContent = "🔍 探検隊のヒント";
+        hintTitle.style.color = "#ff69b4";
+        hintBody.innerHTML = "コースター沿道には高得点の<span style='color:#ff69b4; font-weight:900;'>【ピンクのレア的】</span>が隠されています！<br><br>次は<span style='color:#ffe600; font-weight:900;'>『木の上』</span>や<span style='color:#ffe600; font-weight:900;'>『天井付近』</span>に注目してみよう！";
+      } else {
+        // ピンク検出済み
+        hintTitle.textContent = "🏆 素晴らしい腕前！";
+        hintTitle.style.color = "#ffe600";
+        hintBody.innerHTML = `見事にピンクのレア的を<span style='color:#ff69b4; font-weight:900;'> ${pinkHitCount} 回 </span>発見しました！<br>ジャングルの伝説のトレジャーハンター認定です！`;
+      }
+    });
+
+    // 🔒 管理者用：スコア領域を5回連打で本日のランキングリセット
+    scoreBadge.addEventListener('click', () => {
+      adminTapCount++;
+      if (adminTapCount >= 5) {
+        adminTapCount = 0;
+        const password = prompt("【管理者用メニュー】パスワードを入力してください:");
+        if (password === "admin123") { // 管理者用パスワード
+          const today = new Date().toISOString().split('T')[0];
+          localStorage.removeItem(`ranking_${today}`);
+          alert("本日のランキングデータをリセットしました。");
+        } else if (password !== null) {
+          alert("パスワードが違います。");
+        }
+      }
+      setTimeout(() => { adminTapCount = 0; }, 3000);
     });
   </script>
 </body>

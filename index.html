@@ -212,8 +212,10 @@
     let canScore = true;
     let isCoolingDown = false;
     let isBossPhase = false;
-    let bossHp = 3;
-    const MAX_BOSS_HP = 3;
+    
+    // ボスは4回で撃破
+    let bossHp = 4;
+    const MAX_BOSS_HP = 4;
 
     const videoEl = document.getElementById('camera-feed');
     const canvasEl = document.getElementById('proc-canvas');
@@ -324,15 +326,19 @@
           const r = data[i], g = data[i + 1], b = data[i + 2];
           const [h, s, v] = rgbToHsv(r, g, b);
 
+          // 赤色の判定 (Hue: 335~360度, 0~25度)
           if ((h >= 335 || h <= 25) && s > 0.30 && v > 0.20) {
             redPixels++;
-          } else if (h >= 290 && h < 335 && s > 0.25 && v > 0.35) {
+          }
+          // 💖 ピンク色の判定を厳格化 (Hue: 300~330度、高彩度 s>0.45、高明度 v>0.45)
+          else if (h >= 300 && h <= 330 && s > 0.45 && v > 0.45) {
             pinkPixels++;
           }
         }
 
         const isRedDetected = (redPixels / totalPixels) > 0.008;
-        const isPinkDetected = (pinkPixels / totalPixels) > 0.008;
+        // ピンクの検出しきい値も厳しく設定 (0.015 = 1.5%以上のピクセル占有率が必要)
+        const isPinkDetected = (pinkPixels / totalPixels) > 0.015;
 
         if (!isCoolingDown) {
           if (isPinkDetected) {
@@ -340,15 +346,15 @@
             lockonIndicator.className = 'bonus';
             crosshair.className = 'crosshair detected-pink';
 
-            // ピンクの的を読んだら10,000点加算
+            // ピンクの的：10,000点
             if (canScore) { triggerHit(10000, true); }
           } else if (isRedDetected) {
             lockonIndicator.textContent = "🎯 ターゲット捕捉！";
             lockonIndicator.className = 'locked';
             crosshair.className = 'crosshair detected-red';
 
-            // 赤い的は100点加算
-            if (canScore) { triggerHit(100, false); }
+            // 赤い的：1,000点
+            if (canScore) { triggerHit(1000, false); }
           } else {
             lockonIndicator.textContent = "🔍 ターゲット捜索中...";
             lockonIndicator.className = '';
@@ -367,7 +373,7 @@
 
       onTargetHit(points, isBonus);
 
-      // 0.5秒間読み取りブロック
+      // 0.5秒間クールタイム
       setTimeout(() => {
         isCoolingDown = false;
       }, 500);
@@ -384,12 +390,14 @@
         score += points;
         scoreVal.textContent = score;
       } else {
-        score += points * 2;
+        // ボス戦時は1回検知ごとに5,000点入る
+        score += 5000;
         scoreVal.textContent = score;
         bossHp--;
         const hpPercent = Math.max(0, (bossHp / MAX_BOSS_HP) * 100);
         bossHpFill.style.width = hpPercent + '%';
 
+        // 4回撃破で終了
         if (bossHp <= 0) {
           endGame();
         }
@@ -403,7 +411,7 @@
         warningOverlay.style.display = 'none';
         isBossPhase = true;
         bossHpContainer.style.display = 'flex';
-        lockonIndicator.textContent = "⚠️ ボスを3回撃破せよ！";
+        lockonIndicator.textContent = "⚠️ ボスを4回攻撃して撃破せよ！";
       }, 2500);
     }
 
@@ -430,7 +438,7 @@
         const isMe = (item === myRecord);
         const div = document.createElement('div');
         div.className = `ranking-item ${isMe ? 'my-score' : ''}`;
-        div.innerHTML = `<span>${index + 1}位 ${isMe ? '(あなた)' : ''}</span> <span>${item.score} PT</span>`;
+        div.innerHTML = `<span>${index + 1}位 ${isMe ? '(あなた)' : ''}</span> <span>${item.score.toLocaleString()} PT</span>`;
         rankingListEl.appendChild(div);
       });
 

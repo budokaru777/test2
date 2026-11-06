@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>秘島探検隊 - トロッコショックシューティング</title>
+  <title>秘島探検隊 - トロッコシューティング</title>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800;900&display=swap');
@@ -15,7 +15,7 @@
       height: 100vh; height: -webkit-fill-available;
       overflow: hidden;
       font-family: 'M PLUS Rounded 1c', sans-serif;
-      background: #0f2412;
+      background: #000;
       position: fixed; top: 0; left: 0;
     }
 
@@ -34,59 +34,30 @@
 
     #proc-canvas { display: none; }
 
-    .wooden-panel {
-      background: linear-gradient(180deg, #8b5a2b 0%, #5c3a17 100%);
-      border: 3px solid #3d230d;
-      border-radius: 16px;
-      box-shadow: 0 6px 0 #261507, inset 0 2px 0 rgba(255,255,255,0.3), 0 8px 16px rgba(0,0,0,0.6);
-      position: relative;
-    }
-    .wooden-panel::before {
-      content: '🌿'; position: absolute; top: -12px; left: -10px; font-size: 22px; transform: rotate(-20deg);
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-    }
-    .wooden-panel::after {
-      content: '🍃'; position: absolute; bottom: -8px; right: -8px; font-size: 20px; transform: rotate(15deg);
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-    }
-
-    /* ストーリー・説明画面 */
-    #story-overlay {
+    /* スタート画面（指定画像とスタートボタンのみ） */
+    #start-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999;
-      background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      padding: 15px;
+      background: url('title_bg.jpg') center center / cover no-repeat;
+      display: flex; justify-content: center; align-items: flex-end;
+      padding-bottom: 12vh;
     }
-
-    .story-board {
-      width: 90%; max-width: 520px; padding: 20px; text-align: center;
-      max-height: 90vh; overflow-y: auto;
-    }
-    .story-board h1 {
-      font-size: clamp(18px, 4.5vw, 24px); font-weight: 900; color: #ffe600;
-      text-shadow: 2px 2px 0 #5c2c00; margin-bottom: 8px;
-    }
-    .story-text-box {
-      font-size: clamp(12px, 2.3vw, 14px); color: #fff; line-height: 1.5; font-weight: 800;
-      background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px;
-      border: 1.5px solid #3d230d; text-shadow: 1px 1px 2px #000;
-      text-align: left; margin-bottom: 12px; max-height: 50vh; overflow-y: auto;
-    }
-    .dialogue { margin-bottom: 8px; }
-    .dialogue .speaker-senpai { color: #ffca28; font-weight: 900; }
-    .dialogue .speaker-kouhai { color: #81c784; font-weight: 900; }
-    .dialogue .speaker-native { color: #ff7043; font-weight: 900; }
 
     .btn-gold {
       background: linear-gradient(180deg, #ffe600 0%, #ff9900 100%);
-      color: #3d1e00; border: 2.5px solid #fff; padding: 10px 32px;
-      font-size: clamp(16px, 3.2vw, 20px); font-weight: 900; border-radius: 40px;
-      box-shadow: 0 4px 0 #a65100, 0 6px 12px rgba(0,0,0,0.5); cursor: pointer;
+      color: #3d1e00; border: 3px solid #fff; padding: 14px 48px;
+      font-size: clamp(20px, 4vw, 28px); font-weight: 900; border-radius: 50px;
+      box-shadow: 0 6px 0 #a65100, 0 10px 20px rgba(0,0,0,0.6); cursor: pointer;
       text-shadow: 0 1px 0 rgba(255,255,255,0.6); transition: transform 0.1s;
     }
-    .btn-gold:active { transform: translateY(3px); box-shadow: 0 1px 0 #a65100; }
+    .btn-gold:active { transform: translateY(4px); box-shadow: 0 2px 0 #a65100; }
 
-    /* HUD */
+    /* HUD UI */
+    .wooden-panel {
+      background: linear-gradient(180deg, #8b5a2b 0%, #5c3a17 100%);
+      border: 3px solid #3d230d; border-radius: 16px;
+      box-shadow: 0 6px 0 #261507, inset 0 2px 0 rgba(255,255,255,0.3);
+    }
+
     #ui-layer {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10;
       display: flex; flex-direction: column; justify-content: space-between; padding: 10px 20px;
@@ -97,35 +68,46 @@
       display: flex; justify-content: space-between; align-items: center; padding: 6px 18px;
     }
     .score-badge {
-      font-size: clamp(14px, 2.8vw, 18px); font-weight: 900; color: #ffe600;
-      text-shadow: 2px 2px 0 #000; display: flex; align-items: center; gap: 6px;
+      font-size: clamp(16px, 3vw, 22px); font-weight: 900; color: #ffe600;
+      text-shadow: 2px 2px 0 #000;
     }
 
     #lockon-indicator {
       font-size: clamp(12px, 2.2vw, 15px); font-weight: 900; color: #b2ff59; text-shadow: 1px 1px 2px #000;
     }
-    #lockon-indicator.locked { color: #ff3d00; text-shadow: 0 0 8px #ff3d00, 1px 1px 0 #000; }
+    #lockon-indicator.locked { color: #ff3d00; text-shadow: 0 0 8px #ff3d00; }
+    #lockon-indicator.bonus { color: #ff69b4; text-shadow: 0 0 8px #ff69b4; }
 
     .crosshair {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: min(50vw, 55vh); height: min(50vw, 55vh);
+      width: min(65vw, 65vh); height: min(65vw, 65vh);
       border: 3px dashed rgba(255, 230, 0, 0.75); border-radius: 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
       pointer-events: none; transition: all 0.15s ease;
     }
     .crosshair::after {
       content: '🎯'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      font-size: clamp(20px, 4vh, 32px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      font-size: clamp(24px, 5vh, 40px);
     }
 
-    .crosshair.detected {
-      border: 5px solid #ff1744 !important;
-      background: rgba(255, 23, 68, 0.2);
-      transform: translate(-50%, -50%) scale(1.05);
-      box-shadow: 0 0 30px rgba(255, 23, 68, 0.9) !important;
+    .crosshair.detected-red {
+      border: 5px solid #ff1744 !important; background: rgba(255, 23, 68, 0.25);
+      transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 0 30px #ff1744 !important;
+    }
+    .crosshair.detected-pink {
+      border: 5px solid #ff69b4 !important; background: rgba(255, 105, 180, 0.3);
+      transform: translate(-50%, -50%) scale(1.08); box-shadow: 0 0 35px #ff69b4 !important;
     }
 
-    /* 警告・ボスUI */
+    /* ボス戦UI */
+    #boss-hp-container {
+      position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+      width: 80%; max-width: 400px; display: none; flex-direction: column;
+      align-items: center; z-index: 20;
+    }
+    .boss-label { font-size: 16px; font-weight: 900; color: #ff3d00; text-shadow: 1px 1px 2px #000; margin-bottom: 4px; }
+    .hp-bar-bg { width: 100%; height: 20px; background: #333; border: 2px solid #fff; border-radius: 10px; overflow: hidden; }
+    .hp-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff1744, #ff9100); transition: width 0.2s ease; }
+
     #warning-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 50;
       background: rgba(255, 0, 0, 0.3); display: none; flex-direction: column;
@@ -133,102 +115,104 @@
       animation: blink 0.5s infinite alternate;
     }
     @keyframes blink { from { opacity: 0.3; } to { opacity: 0.8; } }
-
-    #warning-text {
-      font-size: clamp(28px, 7vw, 56px); font-weight: 900; color: #ff1744;
-      text-shadow: 3px 3px 0 #000, -3px -3px 0 #000; letter-spacing: 2px; text-align: center;
-    }
-
-    #boss-hp-container {
-      position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
-      width: 80%; max-width: 400px; display: none; flex-direction: column;
-      align-items: center; z-index: 20;
-    }
-    .boss-label { font-size: 15px; font-weight: 900; color: #ff3d00; text-shadow: 1px 1px 2px #000; margin-bottom: 4px; }
-    .hp-bar-bg { width: 100%; height: 18px; background: #333; border: 2px solid #fff; border-radius: 10px; overflow: hidden; }
-    .hp-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff1744, #ff9100); transition: width 0.2s ease; }
+    #warning-text { font-size: clamp(28px, 7vw, 56px); font-weight: 900; color: #ff1744; text-shadow: 3px 3px 0 #000; }
 
     #hit-flash {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 5;
-      background: rgba(255, 230, 0, 0.4); opacity: 0; transition: opacity 0.08s ease;
-      pointer-events: none;
+      background: rgba(255, 230, 0, 0.4); opacity: 0; transition: opacity 0.08s ease; pointer-events: none;
     }
 
+    /* リザルト＆ランキング画面 */
     #result-modal {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 100;
       background: radial-gradient(circle, rgba(16, 42, 20, 0.95) 0%, rgba(5, 18, 8, 0.98) 100%);
       display: none; flex-direction: column; align-items: center; justify-content: center; padding: 15px;
     }
-    .result-board { width: 85%; max-width: 480px; padding: 20px; text-align: center; }
-    .result-board h1 { font-size: clamp(20px, 4.5vw, 28px); font-weight: 900; color: #ffe600; text-shadow: 2px 2px 0 #5c2c00; margin-bottom: 4px; }
-    .result-board p { color: #76ff03; font-size: clamp(12px, 2.5vw, 15px); font-weight: 900; }
-    .score-box { font-size: clamp(36px, 8vw, 54px); font-weight: 900; color: #fff; margin: 10px 0; text-shadow: 3px 3px 0 #e65100, 0 0 15px #ff9100; }
+    .result-board { width: 90%; max-width: 480px; padding: 20px; text-align: center; }
+    .result-board h1 { font-size: clamp(22px, 5vw, 30px); font-weight: 900; color: #ffe600; text-shadow: 2px 2px 0 #5c2c00; }
+    .score-box { font-size: clamp(32px, 7vw, 48px); font-weight: 900; color: #fff; margin: 8px 0; text-shadow: 3px 3px 0 #e65100; }
+    .rank-info { font-size: 18px; color: #76ff03; font-weight: 900; margin-bottom: 12px; }
+    
+    .ranking-list {
+      background: rgba(0,0,0,0.5); border-radius: 10px; padding: 10px; margin-bottom: 15px; text-align: left;
+    }
+    .ranking-item { display: flex; justify-content: space-between; font-weight: 800; color: #fff; padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .ranking-item.my-score { color: #ffe600; background: rgba(255, 230, 0, 0.2); border-radius: 4px; }
+
+    /* 動画オーバーレイ */
+    #video-overlay {
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 200;
+      background: #000; display: none; justify-content: center; align-items: center;
+    }
+    #ending-video { width: 100vw; height: 100vh; object-fit: contain; }
   </style>
 </head>
 <body>
 
   <div id="game-container">
     <video id="camera-feed" autoplay playsinline muted></video>
-    <canvas id="proc-canvas" width="160" height="120"></canvas>
+    <canvas id="proc-canvas" width="320" height="240"></canvas>
 
-    <!-- プロローグ・ストーリー画面 -->
-    <div id="story-overlay">
-      <div class="wooden-panel story-board">
-        <h1>トレジャーハンター脱出劇</h1>
-        <div class="story-text-box">
-          <div class="dialogue"><span class="speaker-kouhai">後輩:</span> 「先輩！本当に宝なんてあるんすか？絶賛迷子中ですよ！」[cite: 1]</div>
-          <div class="dialogue"><span class="speaker-senpai">先輩:</span> 「文句言うな！あそこに赤い宝石があるらしいんだよ！」[cite: 1]</div>
-          <div class="dialogue"><span class="speaker-native">先住民:</span> 「侵入者だー！！仲間を集めろー！！」[cite: 1]</div>
-          <div class="dialogue"><span class="speaker-senpai">先輩:</span> 「ヤバい追いつかれる！トロッコに乗れ！このショックガンで追っ手の『赤い標的』を撃ち落とせ！！」[cite: 1]</div>
-        </div>
-        <button id="start-btn" class="btn-gold">トロッコ発進！</button>
-      </div>
+    <!-- 初期画面（画像＋ボタンのみ） -->
+    <div id="start-overlay">
+      <button id="start-btn" class="btn-gold">スタート</button>
     </div>
 
     <!-- HUD -->
     <div id="ui-layer">
       <div class="hud-header wooden-panel">
         <div class="score-badge">🏆 SCORE: <span id="score-val">0</span></div>
-        <div id="lockon-indicator">🔍 敵捜索中...</div>
+        <div id="lockon-indicator">🔍 ターゲット捜索中...</div>
       </div>
       <div class="crosshair" id="crosshair"></div>
     </div>
 
     <!-- ボスHPUI -->
     <div id="boss-hp-container">
-      <div class="boss-label">🗿 BOSS: 先住民の巨大ガーディアン</div>
+      <div class="boss-label">🗿 BOSS: 巨大ガーディアン</div>
       <div class="hp-bar-bg"><div id="boss-hp-fill" class="hp-bar-fill"></div></div>
     </div>
 
-    <!-- 追っ手・ボス急襲警告 -->
     <div id="warning-overlay">
-      <div id="warning-text">⚠️ 巨大ガーディアン出現！ ⚠️</div>
-      <div style="color:#fff; font-weight:900; font-size:16px; text-shadow:1px 1px 2px #000; margin-top:8px;">赤く輝く弱点を連続で撃ち抜け！</div>
+      <div id="warning-text">⚠️ BOSS WARNING ⚠️</div>
     </div>
 
     <div id="hit-flash"></div>
 
-    <!-- リザルト画面 -->
+    <!-- リザルト・今日のランキング -->
     <div id="result-modal">
       <div class="wooden-panel result-board">
-        <h1>島からの脱出成功！</h1>
-        <p>追っ手を退け、お宝を持ち帰ることができた！</p>
-        <div class="score-box"><span id="final-score">0</span><span style="font-size:20px;"> PT</span></div>
-        <button class="btn-gold" onclick="location.reload()">もう一度挑戦</button>
+        <h1>MISSION COMPLETE!</h1>
+        <div class="score-box"><span id="final-score">0</span> PT</div>
+        <div class="rank-info" id="rank-info">本日の順位: 計算中...</div>
+
+        <div class="ranking-list" id="ranking-list">
+          <!-- 今日のTOP5をJavaScriptで動的生成 -->
+        </div>
+
+        <button class="btn-gold" id="watch-video-btn" style="padding: 10px 24px; font-size: 18px;">スペシャル動画を見る 🎬</button>
+        <button class="btn-gold" onclick="location.reload()" style="padding: 8px 20px; font-size: 14px; margin-top: 8px; background: linear-gradient(180deg, #ccc 0%, #888 100%); color:#000;">もう一度プレイ</button>
       </div>
+    </div>
+
+    <!-- 動画再生画面 -->
+    <div id="video-overlay">
+      <video id="ending-video" playsinline controls>
+        <source src="ending.mp4" type="video/mp4">
+        お使いのブラウザは動画再生に対応していません。
+      </video>
     </div>
   </div>
 
   <script>
     let score = 0;
-    let isRedDetected = false;
     let isGameStarted = false;
-
-    // ワンショット・ワンキル制御＆ボス制御フラグ
     let canScore = true;
     let isBossPhase = false;
-    let bossHp = 10;
-    const MAX_BOSS_HP = 10;
+    
+    // ボス戦は3回読み取ったら終了
+    let bossHp = 3;
+    const MAX_BOSS_HP = 3;
 
     const videoEl = document.getElementById('camera-feed');
     const canvasEl = document.getElementById('proc-canvas');
@@ -238,11 +222,14 @@
     const lockonIndicator = document.getElementById('lockon-indicator');
     const crosshair = document.getElementById('crosshair');
     const hitFlash = document.getElementById('hit-flash');
-    const storyOverlay = document.getElementById('story-overlay');
+    const startOverlay = document.getElementById('start-overlay');
     const startBtn = document.getElementById('start-btn');
     const warningOverlay = document.getElementById('warning-overlay');
     const bossHpContainer = document.getElementById('boss-hp-container');
     const bossHpFill = document.getElementById('boss-hp-fill');
+    const videoOverlay = document.getElementById('video-overlay');
+    const endingVideo = document.getElementById('ending-video');
+    const watchVideoBtn = document.getElementById('watch-video-btn');
 
     let audioCtx;
 
@@ -250,59 +237,22 @@
       const docEl = document.documentElement;
       if (docEl.requestFullscreen) { docEl.requestFullscreen().catch(() => {}); }
       else if (docEl.webkitRequestFullscreen) { docEl.webkitRequestFullscreen().catch(() => {}); }
-      else if (docEl.msRequestFullscreen) { docEl.msRequestFullscreen().catch(() => {}); }
       window.scrollTo(0, 1);
     }
 
-    function playShotSE() {
+    function playHitSE(isBonus = false) {
       if (!audioCtx) return;
       try {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.12);
-      } catch (e) {}
-    }
-
-    function playHitSE() {
-      if (!audioCtx) return;
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(450, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.22);
-        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.22);
-      } catch (e) {}
-    }
-
-    function playWarningSE() {
-      if (!audioCtx) return;
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(400, audioCtx.currentTime + 0.2);
+        osc.type = isBonus ? 'triangle' : 'square';
+        osc.frequency.setValueAtTime(isBonus ? 880 : 450, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(isBonus ? 1760 : 90, audioCtx.currentTime + 0.22);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
-      } catch(e) {}
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.22);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.22);
+      } catch (e) {}
     }
 
     startBtn.addEventListener('click', async () => {
@@ -314,44 +264,38 @@
       } catch (e) {}
 
       const constraintsList = [
-        { video: { facingMode: { exact: "environment" } }, audio: false },
+        { video: { facingMode: { exact: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
         { video: { facingMode: "environment" }, audio: false },
         { video: true, audio: false }
       ];
 
       let stream = null;
       for (const constraints of constraintsList) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia(constraints);
-          if (stream) break;
-        } catch (err) {}
+        try { stream = await navigator.mediaDevices.getUserMedia(constraints); if (stream) break; } catch (err) {}
       }
 
       if (!stream) {
-        alert("カメラの起動に失敗しました。カメラ使用を許可してください。");
+        alert("カメラが起動できません。");
         return;
       }
 
       videoEl.srcObject = stream;
       try { await videoEl.play(); } catch (e) {}
 
-      storyOverlay.style.display = 'none';
+      startOverlay.style.display = 'none';
       isGameStarted = true;
 
       requestAnimationFrame(processFrame);
 
-      // コースター走行後半（約22秒後）にボス（巨大ガーディアン）戦へ移行
-      setTimeout(triggerBossBattle, 22000);
+      // 20秒後にボス戦に移行
+      setTimeout(triggerBossBattle, 20000);
     });
 
     function rgbToHsv(r, g, b) {
       r /= 255; g /= 255; b /= 255;
       const max = Math.max(r, g, b), min = Math.min(r, g, b);
       const d = max - min;
-      let h = 0;
-      const s = max === 0 ? 0 : d / max;
-      const v = max;
-
+      let h = 0, s = max === 0 ? 0 : d / max, v = max;
       if (max !== min) {
         switch (max) {
           case r: h = (g - b) / d + (g < b ? 6 : 0); break;
@@ -363,59 +307,57 @@
       return [h * 360, s, v];
     }
 
+    // カメラ画像処理（遠距離検知・赤＆ピンク色の識別）
     function processFrame() {
       if (!isGameStarted) return;
 
       if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
-        ctx.drawImage(videoEl, 0, 0, 160, 120);
+        ctx.drawImage(videoEl, 0, 0, 320, 240);
 
-        const startX = 32;
-        const startY = 24;
-        const width = 96;
-        const height = 72;
-
+        // 広範囲を探索（遠くの小さい的も捉える）
+        const startX = 32, startY = 24, width = 256, height = 192;
         const imgData = ctx.getImageData(startX, startY, width, height);
         const data = imgData.data;
 
-        let redPixelCount = 0;
+        let redPixels = 0;
+        let pinkPixels = 0;
         const totalPixels = width * height;
 
         for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-
+          const r = data[i], g = data[i + 1], b = data[i + 2];
           const [h, s, v] = rgbToHsv(r, g, b);
 
-          if ((h >= 335 || h <= 22) && s > 0.40 && v > 0.28) {
-            redPixelCount++;
+          // 遠距離用に明度・彩度判定を緩和
+          // 赤色の判定 (Hue: 330~360 0~25)
+          if ((h >= 335 || h <= 25) && s > 0.30 && v > 0.20) {
+            redPixels++;
+          }
+          // ピンク色の判定 (Hue: 290~330) -> ボーナス
+          else if (h >= 290 && h < 335 && s > 0.25 && v > 0.35) {
+            pinkPixels++;
           }
         }
 
-        const isDetectedNow = (redPixelCount / totalPixels) > 0.05;
+        // 小さい的でも反応するように感度しきい値を低めに設定 (0.8%以上)
+        const isRedDetected = (redPixels / totalPixels) > 0.008;
+        const isPinkDetected = (pinkPixels / totalPixels) > 0.008;
 
-        if (isDetectedNow) {
-          if (!isRedDetected) {
-            isRedDetected = true;
-            lockonIndicator.textContent = "🎯 ターゲット捕捉！";
-            lockonIndicator.classList.add('locked');
-            crosshair.classList.add('detected');
-          }
+        if (isPinkDetected) {
+          lockonIndicator.textContent = "💖 ボーナスターゲット！";
+          lockonIndicator.className = 'bonus';
+          crosshair.className = 'crosshair detected-pink';
 
-          // 手動タップ不要：画面内に赤い標的が入ったら自動的に撃破＆得点（1回認識を外さないと再加算されない）
-          if (canScore) {
-            canScore = false;
-            onTargetHit();
-          }
+          if (canScore) { canScore = false; onTargetHit(300, true); }
+        } else if (isRedDetected) {
+          lockonIndicator.textContent = "🎯 ターゲット捕捉！";
+          lockonIndicator.className = 'locked';
+          crosshair.className = 'crosshair detected-red';
 
+          if (canScore) { canScore = false; onTargetHit(100, false); }
         } else {
-          if (isRedDetected) {
-            isRedDetected = false;
-            lockonIndicator.textContent = "🔍 敵捜索中...";
-            lockonIndicator.classList.remove('locked');
-            crosshair.classList.remove('detected');
-          }
-          // カメラから赤い標的が外れたら再び判定可能状態にする
+          lockonIndicator.textContent = "🔍 ターゲット捜索中...";
+          lockonIndicator.className = '';
+          crosshair.className = 'crosshair';
           canScore = true;
         }
       }
@@ -423,23 +365,24 @@
       requestAnimationFrame(processFrame);
     }
 
-    function onTargetHit() {
-      playShotSE();
-      playHitSE();
+    function onTargetHit(points, isBonus) {
+      playHitSE(isBonus);
 
+      hitFlash.style.background = isBonus ? 'rgba(255, 105, 180, 0.5)' : 'rgba(255, 230, 0, 0.4)';
       hitFlash.style.opacity = '1';
       setTimeout(() => { hitFlash.style.opacity = '0'; }, 120);
 
       if (!isBossPhase) {
-        score += 100;
+        score += points;
         scoreVal.textContent = score;
       } else {
-        score += 200;
+        score += points * 2;
         scoreVal.textContent = score;
         bossHp--;
         const hpPercent = Math.max(0, (bossHp / MAX_BOSS_HP) * 100);
         bossHpFill.style.width = hpPercent + '%';
 
+        // 3回読み取ったらボス戦終了
         if (bossHp <= 0) {
           endGame();
         }
@@ -448,25 +391,62 @@
 
     function triggerBossBattle() {
       if (!isGameStarted) return;
-
       warningOverlay.style.display = 'flex';
-      playWarningSE();
-      const warnInterval = setInterval(playWarningSE, 600);
-
       setTimeout(() => {
-        clearInterval(warnInterval);
         warningOverlay.style.display = 'none';
         isBossPhase = true;
         bossHpContainer.style.display = 'flex';
-        lockonIndicator.textContent = "⚠️ 巨大ガーディアン撃破命令！";
-      }, 3000);
+        lockonIndicator.textContent = "⚠️ ボスを3回撃破せよ！";
+      }, 2500);
     }
 
+    // 今日のランキング保存と表示
     function endGame() {
       isGameStarted = false;
       document.getElementById('result-modal').style.display = 'flex';
       document.getElementById('final-score').textContent = score;
+
+      const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+      const storageKey = `ranking_${today}`;
+      
+      let ranking = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      
+      // 今回のスコアを追加
+      const myRecord = { score: score, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
+      ranking.push(myRecord);
+      
+      // スコアが高い順にソート
+      ranking.sort((a, b) => b.score - a.score);
+      
+      // 自分の順位を特定
+      const myRank = ranking.indexOf(myRecord) + 1;
+      document.getElementById('rank-info').textContent = `本日の順位: 第 ${myRank} 位 / ${ranking.length}人中`;
+
+      // TOP5を表示
+      const rankingListEl = document.getElementById('ranking-list');
+      rankingListEl.innerHTML = '<div style="font-size:12px; color:#ff9100; margin-bottom:4px;">🏆 本日のハイスコア TOP 5</div>';
+      
+      ranking.slice(0, 5).forEach((item, index) => {
+        const isMe = (item === myRecord);
+        const div = document.createElement('div');
+        div.className = `ranking-item ${isMe ? 'my-score' : ''}`;
+        div.innerHTML = `<span>${index + 1}位 ${isMe ? '(あなた)' : ''}</span> <span>${item.score} PT</span>`;
+        rankingListEl.appendChild(div);
+      });
+
+      // 保存
+      localStorage.setItem(storageKey, JSON.stringify(ranking));
     }
+
+    // 動画再生処理
+    watchVideoBtn.addEventListener('click', () => {
+      videoOverlay.style.display = 'flex';
+      endingVideo.play();
+    });
+
+    endingVideo.addEventListener('ended', () => {
+      videoOverlay.style.display = 'none';
+    });
   </script>
 </body>
 </html>

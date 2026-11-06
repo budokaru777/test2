@@ -82,7 +82,7 @@
       font-size: clamp(12px, 2.2vw, 15px); font-weight: 900; color: #b2ff59; text-shadow: 1px 1px 2px #000;
     }
     #lockon-indicator.locked { color: #ff3d00; text-shadow: 0 0 8px #ff3d00; }
-    #lockon-indicator.bonus { color: #ff69b4; text-shadow: 0 0 8px #ff69b4; }
+    #lockon-indicator.bonus { color: #ff69b4; text-shadow: 0 0 12px #ff69b4, 0 0 20px #ff1493; }
 
     .crosshair {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -100,30 +100,30 @@
       transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 0 30px #ff1744 !important;
     }
     .crosshair.detected-pink {
-      border: 5px solid #ff69b4 !important; background: rgba(255, 105, 180, 0.4);
-      transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 45px #ff69b4 !important;
+      border: 5px solid #ff69b4 !important; background: rgba(255, 105, 180, 0.45);
+      transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 50px #ff1493, inset 0 0 25px #ff69b4 !important;
     }
 
-    /* 💖 ピンクエフェクト用ポップアップ */
+    /* 💖 豪華ピンクエフェクト用ポップアップ */
     #pink-effect-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 40;
       pointer-events: none; display: flex; flex-direction: column;
       justify-content: center; align-items: center; opacity: 0; transition: opacity 0.15s ease;
     }
     #pink-effect-overlay.active {
-      opacity: 1; animation: popScale 0.4s ease-out;
+      opacity: 1; animation: popScale 0.5s ease-out;
     }
     @keyframes popScale {
-      0% { transform: scale(0.6); }
-      50% { transform: scale(1.2); }
-      100% { transform: scale(1.0); }
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.25); opacity: 1; }
+      100% { transform: scale(1.0); opacity: 1; }
     }
     .pink-bonus-banner {
-      font-size: clamp(28px, 7vw, 54px); font-weight: 900; color: #fff;
+      font-size: clamp(26px, 6.5vw, 50px); font-weight: 900; color: #fff;
       text-shadow: 0 0 20px #ff1493, 3px 3px 0 #c71585, -3px -3px 0 #ff69b4;
-      background: linear-gradient(90deg, rgba(255,20,147,0.8), rgba(255,105,180,0.9), rgba(255,20,147,0.8));
-      padding: 12px 30px; border-radius: 50px; border: 4px solid #fff;
-      box-shadow: 0 0 30px #ff69b4, inset 0 0 15px #fff;
+      background: linear-gradient(90deg, rgba(255,20,147,0.95), rgba(255,105,180,0.95), rgba(255,20,147,0.95));
+      padding: 14px 32px; border-radius: 50px; border: 4px solid #fff;
+      box-shadow: 0 0 40px #ff69b4, inset 0 0 20px #fff;
     }
 
     /* ボス戦UI */
@@ -174,7 +174,7 @@
     }
     #ending-video { width: 100vw; height: 100vh; object-fit: contain; }
 
-    /* ③ ド派手金ピカ（ゴージャス）ヒント＆謝辞画面 */
+    /* ③ ド派手金ピカヒント＆謝辞画面 */
     #hint-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 300;
       background: radial-gradient(circle, rgba(30, 20, 0, 0.98) 0%, rgba(10, 5, 0, 0.99) 100%);
@@ -182,7 +182,6 @@
       text-align: center; color: #fff; overflow: hidden;
     }
 
-    /* 金ピカパーティクル背景キャンバス */
     #sparkle-canvas {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
       pointer-events: none; z-index: 1;
@@ -283,7 +282,7 @@
       </video>
     </div>
 
-    <!-- ③ ド派手金ピカ（ゴージャス）ヒント＆謝辞画面 -->
+    <!-- ③ ド派手金ピカヒント＆謝辞画面 -->
     <div id="hint-overlay">
       <canvas id="sparkle-canvas"></canvas>
       <div class="gorgeous-card">
@@ -305,10 +304,7 @@
     let bossHp = 4;
     const MAX_BOSS_HP = 4;
 
-    // ピンク読取個数
     let pinkHitCount = 0;
-
-    // 管理者タップ用カウント
     let adminTapCount = 0;
 
     const videoEl = document.getElementById('camera-feed');
@@ -367,11 +363,11 @@
           const gain = audioCtx.createGain();
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.06);
-          gain.gain.setValueAtTime(0.3, audioCtx.currentTime + idx * 0.06);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.06 + 0.2);
+          gain.gain.setValueAtTime(0.35, audioCtx.currentTime + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + idx * 0.06 + 0.25);
           osc.connect(gain); gain.connect(audioCtx.destination);
           osc.start(audioCtx.currentTime + idx * 0.06);
-          osc.stop(audioCtx.currentTime + idx * 0.06 + 0.2);
+          osc.stop(audioCtx.currentTime + idx * 0.06 + 0.25);
         });
       } catch (e) {}
     }
@@ -441,6 +437,7 @@
       return [h * 360, s, v];
     }
 
+    // 🎯 精度の高いカメラ検出処理
     function processFrame() {
       if (!isGameStarted) return;
 
@@ -459,16 +456,19 @@
           const r = data[i], g = data[i + 1], b = data[i + 2];
           const [h, s, v] = rgbToHsv(r, g, b);
 
-          if ((h >= 335 || h <= 25) && s > 0.30 && v > 0.20) {
-            redPixels++;
-          }
-          else if (h >= 300 && h <= 330 && s > 0.45 && v > 0.45) {
+          // 💖 優先的にピンクを捕捉 (Hue: 280〜345度、S>0.25、V>0.25)
+          if (h >= 280 && h <= 345 && s > 0.25 && v > 0.25) {
             pinkPixels++;
+          }
+          // 🎯 赤色の判定 (Hue: 345〜360度、0〜15度)
+          else if ((h >= 345 || h <= 15) && s > 0.30 && v > 0.20) {
+            redPixels++;
           }
         }
 
+        // しきい値の最適化 (ピンクは0.5%以上のピクセルで反応)
+        const isPinkDetected = (pinkPixels / totalPixels) > 0.005;
         const isRedDetected = (redPixels / totalPixels) > 0.008;
-        const isPinkDetected = (pinkPixels / totalPixels) > 0.015;
 
         if (!isCoolingDown) {
           if (isPinkDetected) {
@@ -598,27 +598,23 @@
       }, 3500);
     }
 
-    // 動画終了時 ➔ 金ピカゴージャス画面表示＆キラキラパーティカル開始
     endingVideo.addEventListener('ended', () => {
       videoOverlay.style.display = 'none';
       hintOverlay.style.display = 'flex';
 
-      startSparkleAnimation(); // キラキラ金ピカアニメーション起動
+      startSparkleAnimation();
 
       if (pinkHitCount === 0) {
-        // ピンク未検出時（単位：個）
         hintTitle.textContent = "🔍 探検隊のヒント";
         hintTitle.style.color = "#ffe600";
         hintBody.innerHTML = "コースター沿道には高得点の<br><span style='color:#ff69b4; font-size:18px; font-weight:900;'>【ピンクのレア的】</span>が隠されています！<br><br>次は<span style='color:#ffe600; font-weight:900;'>『木の上』</span>や<span style='color:#ffe600; font-weight:900;'>『天井付近』</span>に注目してみよう！";
       } else {
-        // ピンク検出済み（単位：個）
         hintTitle.textContent = "👑 伝説のハンター 👑";
         hintTitle.style.color = "#ffe600";
-        hintBody.innerHTML = `見事にピンクのレア的を<br><span style='color:#ff69b4; font-size:22px; font-weight:900;'> ${pinkHitCount} 個 </span>発見しました！<br><br>ジャングルの伝説のトレジャーハンター認定です！`;
+        hintBody.innerHTML = `見事にピンクのレア的を<br><span style='color:#ff69b4; font-size:24px; font-weight:900;'> ${pinkHitCount} 個 </span>発見しました！<br><br>ジャングルの伝説のトレジャーハンター認定です！`;
       }
     });
 
-    // 🌟 金ピカキラキラパーティクルを描画する処理
     function startSparkleAnimation() {
       const spCanvas = document.getElementById('sparkle-canvas');
       const spCtx = spCanvas.getContext('2d');
@@ -663,7 +659,6 @@
       drawSparkles();
     }
 
-    // 管理者リセット
     scoreBadge.addEventListener('click', () => {
       adminTapCount++;
       if (adminTapCount >= 5) {

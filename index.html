@@ -210,7 +210,7 @@
     let score = 0;
     let isGameStarted = false;
     let canScore = true;
-    let isCoolingDown = false; // クールダウン中フラグ
+    let isCoolingDown = false;
     let isBossPhase = false;
     let bossHp = 3;
     const MAX_BOSS_HP = 3;
@@ -287,8 +287,6 @@
       isGameStarted = true;
 
       requestAnimationFrame(processFrame);
-      
-      // ゲーム開始16秒後にボス戦
       setTimeout(triggerBossBattle, 16000);
     });
 
@@ -336,19 +334,20 @@
         const isRedDetected = (redPixels / totalPixels) > 0.008;
         const isPinkDetected = (pinkPixels / totalPixels) > 0.008;
 
-        // クールダウン中（0.5秒間）は検出・UI変更・加算を行わない
         if (!isCoolingDown) {
           if (isPinkDetected) {
             lockonIndicator.textContent = "💖 ボーナスターゲット！";
             lockonIndicator.className = 'bonus';
             crosshair.className = 'crosshair detected-pink';
 
-            if (canScore) { triggerHit(300, true); }
+            // ピンクの的を読んだら10,000点加算
+            if (canScore) { triggerHit(10000, true); }
           } else if (isRedDetected) {
             lockonIndicator.textContent = "🎯 ターゲット捕捉！";
             lockonIndicator.className = 'locked';
             crosshair.className = 'crosshair detected-red';
 
+            // 赤い的は100点加算
             if (canScore) { triggerHit(100, false); }
           } else {
             lockonIndicator.textContent = "🔍 ターゲット捜索中...";
@@ -362,14 +361,13 @@
       requestAnimationFrame(processFrame);
     }
 
-    // 0.5秒（500ms）のクールタイムを制御
     function triggerHit(points, isBonus) {
       canScore = false;
       isCoolingDown = true;
 
       onTargetHit(points, isBonus);
 
-      // 0.5秒（500ミリ秒）間は的を読めなくする
+      // 0.5秒間読み取りブロック
       setTimeout(() => {
         isCoolingDown = false;
       }, 500);

@@ -174,7 +174,7 @@
 
     <!-- ボスHPUI -->
     <div id="boss-hp-container">
-      <div class="boss-label">BOSS: 巨大ガーディアン</div>
+      <div class="boss-label">🗿 BOSS: 巨大ガーディアン</div>
       <div class="hp-bar-bg"><div id="boss-hp-fill" class="hp-bar-fill"></div></div>
     </div>
 
@@ -210,7 +210,7 @@
     let score = 0;
     let isGameStarted = false;
     let canScore = true;
-    let isCoolingDown = false; // 0.85秒クールダウンフラグ
+    let isCoolingDown = false; // クールダウン中フラグ
     let isBossPhase = false;
     let bossHp = 3;
     const MAX_BOSS_HP = 3;
@@ -288,7 +288,7 @@
 
       requestAnimationFrame(processFrame);
       
-      // ゲーム開始から16秒後（16000ms）にボス戦へ移行
+      // ゲーム開始16秒後にボス戦
       setTimeout(triggerBossBattle, 16000);
     });
 
@@ -336,40 +336,43 @@
         const isRedDetected = (redPixels / totalPixels) > 0.008;
         const isPinkDetected = (pinkPixels / totalPixels) > 0.008;
 
-        if (isPinkDetected) {
-          lockonIndicator.textContent = "💖 ボーナスターゲット！";
-          lockonIndicator.className = 'bonus';
-          crosshair.className = 'crosshair detected-pink';
+        // クールダウン中（0.5秒間）は検出・UI変更・加算を行わない
+        if (!isCoolingDown) {
+          if (isPinkDetected) {
+            lockonIndicator.textContent = "💖 ボーナスターゲット！";
+            lockonIndicator.className = 'bonus';
+            crosshair.className = 'crosshair detected-pink';
 
-          if (canScore && !isCoolingDown) { triggerHit(300, true); }
-        } else if (isRedDetected) {
-          lockonIndicator.textContent = "🎯 ターゲット捕捉！";
-          lockonIndicator.className = 'locked';
-          crosshair.className = 'crosshair detected-red';
+            if (canScore) { triggerHit(300, true); }
+          } else if (isRedDetected) {
+            lockonIndicator.textContent = "🎯 ターゲット捕捉！";
+            lockonIndicator.className = 'locked';
+            crosshair.className = 'crosshair detected-red';
 
-          if (canScore && !isCoolingDown) { triggerHit(100, false); }
-        } else {
-          lockonIndicator.textContent = "🔍 ターゲット捜索中...";
-          lockonIndicator.className = '';
-          crosshair.className = 'crosshair';
-          canScore = true;
+            if (canScore) { triggerHit(100, false); }
+          } else {
+            lockonIndicator.textContent = "🔍 ターゲット捜索中...";
+            lockonIndicator.className = '';
+            crosshair.className = 'crosshair';
+            canScore = true;
+          }
         }
       }
 
       requestAnimationFrame(processFrame);
     }
 
-    // クールタイム（0.85秒）を伴うヒット処理
+    // 0.5秒（500ms）のクールタイムを制御
     function triggerHit(points, isBonus) {
       canScore = false;
       isCoolingDown = true;
 
       onTargetHit(points, isBonus);
 
-      // 850ミリ秒（0.85秒）経つまで次の読み取りを行わない
+      // 0.5秒（500ミリ秒）間は的を読めなくする
       setTimeout(() => {
         isCoolingDown = false;
-      }, 850);
+      }, 500);
     }
 
     function onTargetHit(points, isBonus) {
@@ -402,7 +405,7 @@
         warningOverlay.style.display = 'none';
         isBossPhase = true;
         bossHpContainer.style.display = 'flex';
-        lockonIndicator.textContent = "⚠️ ボスを撃破せよ！";
+        lockonIndicator.textContent = "⚠️ ボスを3回撃破せよ！";
       }, 2500);
     }
 

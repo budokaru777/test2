@@ -34,12 +34,18 @@
 
     #proc-canvas { display: none; }
 
-    /* スタート画面（指定画像とスタートボタンのみ） */
+    /* 初期画面（スマホ縦画面にピッタリ収まるように調整） */
     #start-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999;
-      background: url('title_bg.jpg') center center / cover no-repeat;
-      display: flex; justify-content: center; align-items: flex-end;
-      padding-bottom: 12vh;
+      /* 横長画像を縦画面全体にきれいにフィットさせる設定 */
+      background-color: #1a0f07; /* 画像上下の余白になじむ背景色 */
+      background-image: url('title_bg.jpg');
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: contain; /* 画面内に画像全体をきれいに収める */
+      
+      display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+      padding-bottom: 10vh;
     }
 
     .btn-gold {
@@ -139,7 +145,7 @@
     .ranking-item { display: flex; justify-content: space-between; font-weight: 800; color: #fff; padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .ranking-item.my-score { color: #ffe600; background: rgba(255, 230, 0, 0.2); border-radius: 4px; }
 
-    /* 動画オーバーレイ */
+    /* 動画再生画面 */
     #video-overlay {
       position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 200;
       background: #000; display: none; justify-content: center; align-items: center;
@@ -153,7 +159,7 @@
     <video id="camera-feed" autoplay playsinline muted></video>
     <canvas id="proc-canvas" width="320" height="240"></canvas>
 
-    <!-- 初期画面（画像＋ボタンのみ） -->
+    <!-- スタート画面（スマホ縦画面に収まるよう表示） -->
     <div id="start-overlay">
       <button id="start-btn" class="btn-gold">スタート</button>
     </div>
@@ -169,7 +175,7 @@
 
     <!-- ボスHPUI -->
     <div id="boss-hp-container">
-      <div class="boss-label">🗿 BOSS: 巨大ガーディアン</div>
+      <div class="boss-label">BOSS: 巨大ガーディアン</div>
       <div class="hp-bar-bg"><div id="boss-hp-fill" class="hp-bar-fill"></div></div>
     </div>
 
@@ -179,27 +185,24 @@
 
     <div id="hit-flash"></div>
 
-    <!-- リザルト・今日のランキング -->
+    <!-- リザルト画面 -->
     <div id="result-modal">
       <div class="wooden-panel result-board">
         <h1>MISSION COMPLETE!</h1>
         <div class="score-box"><span id="final-score">0</span> PT</div>
         <div class="rank-info" id="rank-info">本日の順位: 計算中...</div>
 
-        <div class="ranking-list" id="ranking-list">
-          <!-- 今日のTOP5をJavaScriptで動的生成 -->
-        </div>
+        <div class="ranking-list" id="ranking-list"></div>
 
         <button class="btn-gold" id="watch-video-btn" style="padding: 10px 24px; font-size: 18px;">スペシャル動画を見る 🎬</button>
         <button class="btn-gold" onclick="location.reload()" style="padding: 8px 20px; font-size: 14px; margin-top: 8px; background: linear-gradient(180deg, #ccc 0%, #888 100%); color:#000;">もう一度プレイ</button>
       </div>
     </div>
 
-    <!-- 動画再生画面 -->
+    <!-- 動画画面 -->
     <div id="video-overlay">
       <video id="ending-video" playsinline controls>
         <source src="ending.mp4" type="video/mp4">
-        お使いのブラウザは動画再生に対応していません。
       </video>
     </div>
   </div>
@@ -209,8 +212,6 @@
     let isGameStarted = false;
     let canScore = true;
     let isBossPhase = false;
-    
-    // ボス戦は3回読み取ったら終了
     let bossHp = 3;
     const MAX_BOSS_HP = 3;
 
@@ -286,8 +287,6 @@
       isGameStarted = true;
 
       requestAnimationFrame(processFrame);
-
-      // 20秒後にボス戦に移行
       setTimeout(triggerBossBattle, 20000);
     });
 
@@ -307,14 +306,12 @@
       return [h * 360, s, v];
     }
 
-    // カメラ画像処理（遠距離検知・赤＆ピンク色の識別）
     function processFrame() {
       if (!isGameStarted) return;
 
       if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
         ctx.drawImage(videoEl, 0, 0, 320, 240);
 
-        // 広範囲を探索（遠くの小さい的も捉える）
         const startX = 32, startY = 24, width = 256, height = 192;
         const imgData = ctx.getImageData(startX, startY, width, height);
         const data = imgData.data;
@@ -327,18 +324,13 @@
           const r = data[i], g = data[i + 1], b = data[i + 2];
           const [h, s, v] = rgbToHsv(r, g, b);
 
-          // 遠距離用に明度・彩度判定を緩和
-          // 赤色の判定 (Hue: 330~360 0~25)
           if ((h >= 335 || h <= 25) && s > 0.30 && v > 0.20) {
             redPixels++;
-          }
-          // ピンク色の判定 (Hue: 290~330) -> ボーナス
-          else if (h >= 290 && h < 335 && s > 0.25 && v > 0.35) {
+          } else if (h >= 290 && h < 335 && s > 0.25 && v > 0.35) {
             pinkPixels++;
           }
         }
 
-        // 小さい的でも反応するように感度しきい値を低めに設定 (0.8%以上)
         const isRedDetected = (redPixels / totalPixels) > 0.008;
         const isPinkDetected = (pinkPixels / totalPixels) > 0.008;
 
@@ -382,7 +374,6 @@
         const hpPercent = Math.max(0, (bossHp / MAX_BOSS_HP) * 100);
         bossHpFill.style.width = hpPercent + '%';
 
-        // 3回読み取ったらボス戦終了
         if (bossHp <= 0) {
           endGame();
         }
@@ -396,33 +387,26 @@
         warningOverlay.style.display = 'none';
         isBossPhase = true;
         bossHpContainer.style.display = 'flex';
-        lockonIndicator.textContent = "⚠️ ボスを3回撃破せよ！";
+        lockonIndicator.textContent = "⚠️ ボスを撃破せよ！";
       }, 2500);
     }
 
-    // 今日のランキング保存と表示
     function endGame() {
       isGameStarted = false;
       document.getElementById('result-modal').style.display = 'flex';
       document.getElementById('final-score').textContent = score;
 
-      const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+      const today = new Date().toISOString().split('T')[0];
       const storageKey = `ranking_${today}`;
       
       let ranking = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      
-      // 今回のスコアを追加
       const myRecord = { score: score, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
       ranking.push(myRecord);
-      
-      // スコアが高い順にソート
       ranking.sort((a, b) => b.score - a.score);
       
-      // 自分の順位を特定
       const myRank = ranking.indexOf(myRecord) + 1;
       document.getElementById('rank-info').textContent = `本日の順位: 第 ${myRank} 位 / ${ranking.length}人中`;
 
-      // TOP5を表示
       const rankingListEl = document.getElementById('ranking-list');
       rankingListEl.innerHTML = '<div style="font-size:12px; color:#ff9100; margin-bottom:4px;">🏆 本日のハイスコア TOP 5</div>';
       
@@ -434,11 +418,9 @@
         rankingListEl.appendChild(div);
       });
 
-      // 保存
       localStorage.setItem(storageKey, JSON.stringify(ranking));
     }
 
-    // 動画再生処理
     watchVideoBtn.addEventListener('click', () => {
       videoOverlay.style.display = 'flex';
       endingVideo.play();
